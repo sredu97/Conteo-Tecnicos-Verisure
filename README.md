@@ -26,7 +26,7 @@ Quien tenga el fichero puede intentar adivinar la contraseña en su propio equip
 
 La contraseña no se escribe aquí: este repositorio es público y el README se lee desde fuera. Se comparte aparte, por privado.
 
-Para cambiarla, abre `clave.html` en el sitio ya publicado (`https://<usuario>.github.io/<repositorio>/clave.html`), mete la actual y la nueva, y sube el `index.html` que te descarga.
+Para cambiarla se usa una herramienta que **no está en este repositorio**: vive en el ordenador del responsable, pide su propia clave maestra, recifra el listado y devuelve un `index.html` nuevo que se sube aquí encima del que hay.
 
 Límites, para que no haya sorpresas: la contraseña es la misma para todos, quien la tenga entra, y si alguien la reenvía no hay forma de saberlo ni de revocarla salvo cambiándola. Requiere `https://` (GitHub Pages lo es); abriendo el fichero con doble clic desde el disco, el navegador no deja descifrar.
 
