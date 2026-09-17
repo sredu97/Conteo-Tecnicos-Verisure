@@ -220,6 +220,35 @@
   }
   .sheet-card .row-btns{display:flex;gap:8px;margin-top:10px;justify-content:flex-end}
 
+  
+  /* ---------- acceso ---------- */
+  .lock{
+    position:fixed;inset:0;z-index:60;background:var(--bg);
+    display:flex;align-items:center;justify-content:center;padding:24px 12px;
+  }
+  .lock[hidden]{display:none}
+  .lock-card{
+    width:100%;max-width:380px;background:var(--card);border:1px solid var(--line);
+    border-left:3px solid var(--brand);border-radius:var(--radius);padding:22px 20px 20px;
+  }
+  .lock h2{
+    font-family:"Barlow Semi Condensed",sans-serif;font-size:26px;line-height:1.1;
+    margin:0 0 6px;color:var(--brand);font-weight:700;
+  }
+  .lock p{margin:0 0 18px;color:var(--text-soft);font-size:14px}
+  .lock label{display:block;font-size:13px;color:var(--text-soft);margin-bottom:5px;font-weight:500}
+  .lock input[type="password"]{
+    width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:9px;
+    background:var(--card-2);color:var(--text);font-family:inherit;font-size:16px;
+  }
+  .lock input[type="password"]:focus{outline:2px solid var(--brand);outline-offset:1px}
+  .lock .remember{
+    display:flex;gap:8px;align-items:center;margin-top:12px;font-size:13px;color:var(--text-soft);
+  }
+  .lock .remember input{width:auto}
+  .lock .err{color:var(--defectuoso);font-size:13px;min-height:18px;margin-top:8px}
+  .lock .btn{width:100%;margin-top:6px;padding:12px}
+
   :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   @media (prefers-reduced-motion:no-preference){
     .step,.chip,.seg,.toast{transition:background-color .12s ease,color .12s ease,border-color .12s ease,opacity .18s ease}
@@ -232,6 +261,19 @@
 </style>
 </head>
 <body>
+
+
+<section class="lock" id="lock">
+  <div class="lock-card">
+    <h2>Acceso restringido</h2>
+    <p>Herramienta de uso interno. Introduce la contraseña para abrir el listado.</p>
+    <label for="pass">Contraseña</label>
+    <input id="pass" type="password" autocomplete="current-password" enterkeyhint="go">
+    <label class="remember"><input type="checkbox" id="remember"> Recordar en este dispositivo</label>
+    <div class="err" id="lockErr"></div>
+    <button class="btn primary" id="lockGo">Entrar</button>
+  </div>
+</section>
 
 <!-- ===== identificación ===== -->
 <section class="gate" id="gate">
@@ -304,128 +346,8 @@
 
 <script>
 /* ===== referencias (todas a cero) ===== */
-const BASE = [
-["AJ002SP","Antijamming Sentinel ES sin pila"],
-["AJ002V","Detector Inhibición 2.0 DDI Sentinel"],
-["FKTHFM","Kit EFM Self Energy caja metálica CBANK"],
-["FKTVF4","Kit instalación VF4 Securitas Direct"],
-["FKT10FM","Kit Premium EFM Hogar ES"],
-["FKT15FM","Kit Fast 3G"],
-["FKT4CB","Kit CBANK VF4 Securitas Direct"],
-["FOG001","Módulo químico FOG con plástico"],
-["FOG003SP","Módulo electrónico Fog"],
-["FTR3SP","Tag Reader Sin Pila SP"],
-["FTR6SP","Tag Reader EFM Sin Pila SP"],
-["FTR7SP","Tag Reader VF4"],
-["F013","Batería VeriFast 3,7 V"],
-["F014","Fuente alimentación panel Fast"],
-["F033","Fuente alimentación F039"],
-["F037","Módulo 3G"],
-["F039A","Panel Central 3G V9.7.4"],
-["F045","Panel Central VF4"],
-["F049","Panel Central VSF4 blanco"],
-["F055","Cable con fuente alimentación Fast4"],
-["F219SP","Fotodetector IPDE LLI"],
-["F219SPT","IPDE Turístico"],
-["F229SP","IPDE+ EU"],
-["F250SP","Magnético MGLS EFM"],
-["F252SP","Magnético MGLS+"],
-["F420SP","Tag Reader Fast TR5 sin pila"],
-["F443","Llave Verifast Blanca"],
-["F444","Llave Verifast Negra"],
-["F445","Llave Verifast Roja"],
-["F446","Llave Verifast Azul"],
-["F447","Llave Verifast Verde"],
-["F448","Llave Fast Marrón"],
-["F449","Llave Verifast Rosa"],
-["F455SP","Detector Perimetral OPDI SP"],
-["F466SP","Pulsador SOS EFM Fast sin pila"],
-["F500SP","Sirena Semi Outdoor SP"],
-["F505SP","Sirena Semi Outdoor EFM SP"],
-["120213","Orion fotodetector interior"],
-["120215","Croptex Perimetral Moonshot"],
-["120221","Motion Detector GW-MD-CD2 (Aquila black)"],
-["120236","AA Battery holder Aquila"],
-["120264","Motion Detector GW-MD-CD2 (Aquila black)"],
-["121272","Magnético shock sensor"],
-["121295","Shock Sensor MC3"],
-["121480","Detector de Humo Moonshot"],
-["121770","Panic Button Moonshot"],
-["131179","Sirena SVK Moonshot"],
-["131179IN","Sirena SVK Moonshot"],
-["131347","Llave Turquesa Moonshot"],
-["131348","Llave Roja Moonshot"],
-["131370","NGS GW-TAG2-White"],
-["131371","NGS GW-TAG2-Black"],
-["131372","NGS GW-TAG2-Red"],
-["131373","NGS GW-TAG2-Green"],
-["131375","NGS GW-TAG2-Pink"],
-["131376","NGS GW-TAG2-Turquoise"],
-["131377","NGS GW-TAG2-Blue"],
-["131379","NGS GW-TAG2-Light Blue"],
-["131560","Smartlock Cylinder 30x30 (5 keys)"],
-["131561","Smartlock Cylinder 35x30 (5 keys)"],
-["131562","Smartlock Cylinder 40x30 (5 keys)"],
-["131563","Smartlock Cylinder 45x30 (5 keys)"],
-["131564","Smartlock Cylinder 50x30 (5 keys)"],
-["131565","Smartlock Cylinder 55x30 (5 keys)"],
-["131566","Smartlock Cylinder 60x30 (5 keys)"],
-["131567","Smartlock Cylinder 65x30 (5 keys)"],
-["131568","Smartlock Cylinder 70x30 (5 keys)"],
-["131581","Cilindro Smartlock Leva Corta 30"],
-["131582","Cilindro Smartlock Leva Corta 35"],
-["131790","Smartlock Danalock new HW"],
-["131791","Smartlock 1.2"],
-["134039","Mini Outdoor Keypad"],
-["134039V","Kit Mini Outdoor Keypad Black + 2 NGS Red sticker"],
-["134052","Mini Outdoor Keypad White"],
-["134052V","Kit Mini Outdoor Keypad White + 2 NGS Red sticker"],
-["135058","ZeroVision Módulo electrónico Moonshot"],
-["135059","Módulo químico ZV Moonshot"],
-["135104","ZeroVision NOX Chemical Module GW"],
-["182083","Panel Central Sur Moonshot"],
-["182084","Panel Central Sur Moonshot"],
-["199013","Kit PreSense ES"],
-["203101","Tarjeta SIM Orange Moonshot"],
-["203102","Tarjeta SIM Vodafone Sur Moonshot"],
-["203118","Tarjeta SIM Global Vodafone con Roaming"],
-["205036","Pila Alkaline Ultra AAA 1,5 V Moonshot"],
-["205086","Battery v2 VBox-Pro/CU1"],
-["205112","Battery AA Lithium cell 1.5 V"],
-["205114","Battery AAA Lithium cell"],
-["2227SP","Detector de Humo"],
-["2409SP","Mando KF3 Fast Sin Pila"],
-["2410SP","Mando KF3 Fast Rosa Sin Pila"],
-["2411SP","Mando KF3 para VF4 Negro"],
-["2707","Módulo 2G nuevo"],
-["280785","Mando Keyfob GW rojo"],
-["322040","Arlo Essential Wired 1 cam"],
-["322040V","Cámara ARLO Indoor (wired)"],
-["322050","Essential2 FHD Outdoor Camera"],
-["322050V","Cámara ARLO Essential2 FHD outdoor"],
-["322060V","Kit ARLO Essential Indoor FHD"],
-["322070","Essential3 Indoor Camera"],
-["322070V","Kit ARLO Essential Indoor3"],
-["322080V","Kit Cámara ARLO Essential3 FHD"],
-["324540","Hub cámara Arlo"],
-["325603","Panel Solar ARLO Essential"],
-["326600","Essential2 Solar Panel"],
-["327600","Arlo Universal Solar Panel"],
-["340001V","Detector Inhibición 3 DDI Sentinel"],
-["340004","Antijamming Sentinel GW-AJV3"],
-["7002","Pila litio 3V CR123A"],
-["7002K","Pila litio CR123A 3V"],
-["7006","Pila alcalina LRS20-2 1,5 V"],
-["7008","Pila litio 3V botón CR2450"],
-["7011","Pack 3 pilas litio CR123A"],
-["7014","Pila alcalina LR6 1,5 V high quality"],
-["9010","Batería 12V-7,2AH"],
-["9085","Tarjeta SIM Movistar Global SP"],
-["9088","Tarjeta SIM Orange unificada"],
-["9107","Tarjeta SIM Vodafone Verifast"],
-["9114","Tarjeta SIM Vodafone VF4 4G"],
-["9115","Tarjeta SIM Orange VF4 4G"]
-];
+const DATA = "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";
+let BASE = [];
 
 const TYPES = [
   {key:"p", label:"Propio",     color:"var(--propio)"},
@@ -435,8 +357,12 @@ const TYPES = [
 ];
 const KEYS = TYPES.map(t=>t.key);
 
-const items = BASE.map(r=>({ref:r[0], name:r[1], cnt:{p:0,t:0,d:0,s:0}}));
-const byRef = new Map(items.map(i=>[i.ref,i]));
+let items = [];
+let byRef = new Map();
+function initItems(){
+  items = BASE.map(r=>({ref:r[0], name:r[1], cnt:{p:0,t:0,d:0,s:0}}));
+  byRef = new Map(items.map(i=>[i.ref,i]));
+}
 const touched = new Set();
 const isTouched = (ref,k)=>touched.has(ref+"|"+k);
 
@@ -718,8 +644,75 @@ try{
 }catch(e){}
 
 /* ---------- arranque ---------- */
-const ready = load();
-if(ready) closeGate(); else openGate();
+function arrancar(){
+  const ready = load();
+  if(ready) closeGate(); else openGate();
+}
+
+/* ---------- acceso: el catálogo va cifrado (AES-GCM + PBKDF2) ---------- */
+async function derivar(pass, salt){
+  const km = await crypto.subtle.importKey("raw", new TextEncoder().encode(pass), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey(
+    {name:"PBKDF2", salt, iterations:200000, hash:"SHA-256"},
+    km, {name:"AES-GCM", length:256}, false, ["decrypt"]
+  );
+}
+async function descifrar(pass){
+  const raw = Uint8Array.from(atob(DATA), c=>c.charCodeAt(0));
+  const salt = raw.slice(0,16), iv = raw.slice(16,28), ct = raw.slice(28);
+  const key = await derivar(pass, salt);
+  const out = await crypto.subtle.decrypt({name:"AES-GCM", iv}, key, ct);
+  return JSON.parse(new TextDecoder().decode(out));
+}
+const lockEl = document.getElementById("lock");
+const passIn = document.getElementById("pass");
+const lockErr = document.getElementById("lockErr");
+const lockGo = document.getElementById("lockGo");
+
+async function entrar(pass, recordar, silencioso){
+  if(!pass){ lockErr.textContent = "Escribe la contraseña."; return false; }
+  lockGo.disabled = true;
+  lockGo.textContent = "Abriendo…";
+  try{
+    BASE = await descifrar(pass);
+    initItems();
+    try{
+      sessionStorage.setItem(LS+"-pw", pass);
+      if(recordar) localStorage.setItem(LS+"-pw", pass);
+    }catch(e){}
+    lockEl.hidden = true;
+    arrancar();
+    return true;
+  }catch(e){
+    if(!silencioso) lockErr.textContent = "Contraseña incorrecta.";
+    try{ localStorage.removeItem(LS+"-pw"); sessionStorage.removeItem(LS+"-pw"); }catch(e2){}
+    passIn.value = "";
+    return false;
+  }finally{
+    lockGo.disabled = false;
+    lockGo.textContent = "Entrar";
+  }
+}
+lockGo.addEventListener("click", ()=>entrar(passIn.value.trim(), document.getElementById("remember").checked, false));
+passIn.addEventListener("keydown", e=>{ if(e.key==="Enter") lockGo.click(); });
+passIn.addEventListener("input", ()=>{ lockErr.textContent = ""; });
+
+(async ()=>{
+  if(!(window.crypto && crypto.subtle)){
+    lockErr.textContent = "Ábrela con https:// para poder descifrar el listado.";
+    return;
+  }
+  let guardada = null;
+  try{ guardada = sessionStorage.getItem(LS+"-pw") || localStorage.getItem(LS+"-pw"); }catch(e){}
+  if(guardada) await entrar(guardada, false, true);
+  if(lockEl.hidden === false) passIn.focus();
+})();
+
+function salir(){
+  try{ sessionStorage.removeItem(LS+"-pw"); localStorage.removeItem(LS+"-pw"); }catch(e){}
+  location.reload();
+}
+
 
 
 /* descarga de ficheros en navegador (GitHub Pages) */

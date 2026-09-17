@@ -18,6 +18,16 @@ El conteo se guarda en el `localStorage` del navegador del técnico. Cada uno ve
 
 Si se cierra y se vuelve a abrir, recupera lo contado y la identificación. **Vaciar** pone la hoja a cero otra vez.
 
+## Contraseña
+
+Al abrirla pide contraseña. No es un adorno: el listado de referencias va cifrado dentro de `index.html` con **AES-GCM** y una clave derivada de la contraseña con **PBKDF2** (200.000 iteraciones). Sin la contraseña correcta no hay nada legible en el código fuente.
+
+Contraseña de partida: `ConteoStock2026` — cámbiala antes de repartir el enlace.
+
+Para cambiarla, abre `clave.html` en el sitio ya publicado (`https://<usuario>.github.io/<repositorio>/clave.html`), mete la actual y la nueva, y sube el `index.html` que te descarga.
+
+Límites, para que no haya sorpresas: la contraseña es la misma para todos, quien la tenga entra, y si alguien la reenvía no hay forma de saberlo ni de revocarla salvo cambiándola. Requiere `https://` (GitHub Pages lo es); abriendo el fichero con doble clic desde el disco, el navegador no deja descifrar.
+
 ## Publicar en GitHub Pages
 
 1. Sube estos ficheros a la raíz del repositorio.
