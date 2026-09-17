@@ -268,7 +268,8 @@
     <h2>Acceso restringido</h2>
     <p>Herramienta de uso interno. Introduce la contraseña para abrir el listado.</p>
     <label for="pass">Contraseña</label>
-    <input id="pass" type="password" autocomplete="current-password" enterkeyhint="go">
+    <input id="pass" type="password" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="go">
+    <label class="remember"><input type="checkbox" id="verpass"> Ver la contraseña</label>
     <label class="remember"><input type="checkbox" id="remember"> Recordar en este dispositivo</label>
     <div class="err" id="lockErr"></div>
     <button class="btn primary" id="lockGo">Entrar</button>
@@ -669,10 +670,12 @@ const passIn = document.getElementById("pass");
 const lockErr = document.getElementById("lockErr");
 const lockGo = document.getElementById("lockGo");
 
+let abriendo = false;
 async function entrar(pass, recordar, silencioso){
-  if(!pass){ lockErr.textContent = "Escribe la contraseña."; return false; }
-  lockGo.disabled = true;
-  lockGo.textContent = "Abriendo…";
+  if(!pass){ if(!silencioso) lockErr.textContent = "Escribe la contraseña."; return false; }
+  if(abriendo) return false;
+  abriendo = true;
+  if(!silencioso){ lockGo.disabled = true; lockGo.textContent = "Abriendo…"; lockErr.textContent = ""; }
   try{
     BASE = await descifrar(pass);
     initItems();
@@ -684,18 +687,21 @@ async function entrar(pass, recordar, silencioso){
     arrancar();
     return true;
   }catch(e){
-    if(!silencioso) lockErr.textContent = "Contraseña incorrecta.";
     try{ localStorage.removeItem(LS+"-pw"); sessionStorage.removeItem(LS+"-pw"); }catch(e2){}
-    passIn.value = "";
+    if(!silencioso){
+      lockErr.textContent = "Contraseña incorrecta. Revisa mayúsculas y que no sobre un espacio al final.";
+      passIn.select();
+    }
     return false;
   }finally{
-    lockGo.disabled = false;
-    lockGo.textContent = "Entrar";
+    abriendo = false;
+    if(!silencioso){ lockGo.disabled = false; lockGo.textContent = "Entrar"; }
   }
 }
 lockGo.addEventListener("click", ()=>entrar(passIn.value.trim(), document.getElementById("remember").checked, false));
 passIn.addEventListener("keydown", e=>{ if(e.key==="Enter") lockGo.click(); });
 passIn.addEventListener("input", ()=>{ lockErr.textContent = ""; });
+document.getElementById("verpass").addEventListener("change", e=>{ passIn.type = e.target.checked ? "text" : "password"; });
 
 (async ()=>{
   if(!(window.crypto && crypto.subtle)){
