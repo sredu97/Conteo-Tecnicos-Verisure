@@ -3,5 +3,5 @@
   <rect x="96" y="128" width="320" height="256" rx="20" fill="none" stroke="#FFFFFF" stroke-width="26"/>
   <path d="M96 208h320" stroke="#FFFFFF" stroke-width="26"/>
   <text x="256" y="336" font-family="Helvetica,Arial,sans-serif" font-size="150" font-weight="bold"
-        fill="#FFFFFF" text-anchor="middle">0</text>
+        fill="#FFFFFF" text-anchor="middle"></text>
 </svg>

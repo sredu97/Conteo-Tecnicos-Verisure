@@ -20,9 +20,11 @@ Si se cierra y se vuelve a abrir, recupera lo contado y la identificación. **Va
 
 ## Contraseña
 
-Al abrirla pide contraseña. No es un adorno: el listado de referencias va cifrado dentro de `index.html` con **AES-GCM** y una clave derivada de la contraseña con **PBKDF2** (200.000 iteraciones). Sin la contraseña correcta no hay nada legible en el código fuente.
+Al abrirla pide contraseña. No es un adorno: el listado de referencias va cifrado dentro de `index.html` con **AES-GCM** y una clave derivada de la contraseña con **PBKDF2** (200.000 iteraciones). Sin la contraseña correcta no hay nada legible en el código fuente, ni aunque alguien clone el repositorio entero.
 
-Contraseña de partida: `ConteoStock2026` — cámbiala antes de repartir el enlace.
+Quien tenga el fichero puede intentar adivinar la contraseña en su propio equipo, sin límite de intentos. Usa una larga y que no se deduzca de la empresa ni de la matrícula.
+
+La contraseña no se escribe aquí: este repositorio es público y el README se lee desde fuera. Se comparte aparte, por privado.
 
 Para cambiarla, abre `clave.html` en el sitio ya publicado (`https://<usuario>.github.io/<repositorio>/clave.html`), mete la actual y la nueva, y sube el `index.html` que te descarga.
 
