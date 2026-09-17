@@ -1,0 +1,19 @@
+{
+  "name": "Hoja de conteo de stock",
+  "short_name": "Conteo stock",
+  "description": "Hoja de conteo en blanco para técnicos",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#E2001A",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
