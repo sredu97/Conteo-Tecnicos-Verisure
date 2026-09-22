@@ -222,6 +222,61 @@
   .sheet-card .row-btns{display:flex;gap:8px;margin-top:10px;justify-content:flex-end}
 
   
+  /* ---------- secciones e instalaciones ---------- */
+  .views{display:flex;gap:6px;padding:0 0 10px}
+  .views button{
+    flex:1;border:1px solid var(--line);background:var(--card);color:var(--text-soft);
+    border-radius:var(--radius);padding:8px 10px;font-family:inherit;font-size:14px;
+    font-weight:500;cursor:pointer;
+  }
+  .views button[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:#fff}
+  .panel-t{
+    font-family:"Barlow Semi Condensed",sans-serif;font-size:22px;font-weight:700;
+    margin:16px 0 4px;color:var(--text);
+  }
+  .panel-p{color:var(--text-soft);font-size:13.5px;margin:0 0 6px}
+  .field{margin-bottom:12px}
+  .field label{display:block;font-size:13px;color:var(--text-soft);margin-bottom:5px;font-weight:500}
+  .field input, .field select{
+    width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:9px;
+    background:var(--card);color:var(--text);font-family:inherit;font-size:16px;
+  }
+  .field input:focus, .field select:focus{outline:2px solid var(--brand);outline-offset:1px}
+  .err{color:var(--defectuoso);font-size:13px;min-height:18px}
+  .inst-head{
+    background:var(--card);border:1px solid var(--line-soft);border-left:3px solid var(--brand);
+    border-radius:var(--radius);padding:10px 12px;margin:14px 0 4px;width:100%;text-align:left;
+    cursor:pointer;font-family:inherit;color:var(--text);
+  }
+  .inst-head b{
+    display:block;font-family:"Barlow Semi Condensed",sans-serif;font-size:19px;
+    font-variant-numeric:tabular-nums;
+  }
+  .inst-head span{font-size:12.5px;color:var(--text-soft)}
+  li.inst{
+    background:var(--card);border:1px solid var(--line-soft);border-left:3px solid var(--brand);
+    border-radius:var(--radius);display:grid;grid-template-columns:1fr auto;align-items:center;
+    gap:8px;padding:10px 10px 10px 11px;
+  }
+  li.inst .num{
+    font-family:"Barlow Semi Condensed",sans-serif;font-weight:700;font-size:17px;
+    font-variant-numeric:tabular-nums;
+  }
+  li.inst .meta{font-size:12.5px;color:var(--text-soft);margin-top:1px}
+  li.inst .acc{display:flex;gap:6px}
+  .mini{
+    border:1px solid var(--line);background:var(--card);color:var(--text-soft);
+    border-radius:8px;padding:7px 11px;font-family:inherit;font-size:13px;cursor:pointer;
+  }
+  .mini.danger{color:var(--defectuoso);border-color:var(--defectuoso)}
+  .stock-pill{
+    font-size:11px;font-family:"Barlow Semi Condensed",sans-serif;font-weight:600;
+    border:1px dashed var(--line);border-radius:999px;padding:1px 7px;color:var(--text-faint);
+    font-variant-numeric:tabular-nums;
+  }
+  .stock-pill.poco{color:var(--defectuoso);border-color:var(--defectuoso)}
+  .stock-pill.base{color:var(--brand);border-color:var(--brand);border-style:solid}
+
   /* ---------- acceso ---------- */
   .lock{
     position:fixed;inset:0;z-index:60;background:var(--bg);
@@ -305,6 +360,12 @@
       <button class="tec" id="tec" title="Cambiar nombre o matrícula"></button>
       <button class="theme-btn" id="theme" title="Cambiar tema" aria-label="Cambiar tema">◐</button>
     </div>
+    <nav class="views" role="group" aria-label="Secciones">
+      <button data-v="stock" aria-pressed="true">Conteo</button>
+      <button data-v="inst" aria-pressed="false">Instalaciones</button>
+    </nav>
+
+    <div id="stockControls">
     <div class="segmented" id="segmented" role="group" aria-label="Tipo de cantidad"></div>
     <div class="tools">
       <div class="search">
@@ -313,24 +374,87 @@
       </div>
     </div>
     <div class="filters" id="filters" role="group" aria-label="Filtros"></div>
+    </div>
   </div>
 </header>
 
 <main class="wrap">
-  <div class="count-line">
-    <span class="dot"></span><span id="countline"></span>
-    <span class="progress"><i id="progress"></i></span>
-  </div>
-  <ul class="list" id="list"></ul>
-  <div class="empty" id="empty" hidden><b>Sin resultados</b>Prueba con otra referencia o cambia el filtro.</div>
+  <section id="viewStock">
+    <div class="count-line">
+      <span class="dot"></span><span id="countline"></span>
+      <span class="progress"><i id="progress"></i></span>
+    </div>
+    <ul class="list" id="list"></ul>
+    <div class="empty" id="empty" hidden><b>Sin resultados</b>Prueba con otra referencia o cambia el filtro.</div>
+  </section>
+
+  <section id="viewInst" hidden>
+    <div id="instLista">
+      <div class="tools" style="padding-top:12px">
+        <div class="search">
+          <input id="instListQ" type="search" placeholder="Buscar por número, tipo o nota" autocomplete="off" aria-label="Buscar instalación">
+        </div>
+      </div>
+      <div class="count-line"><span class="dot"></span><span id="instCount"></span></div>
+      <ul class="list" id="instList"></ul>
+      <div class="empty" id="instEmpty" hidden><b>Sin instalaciones</b>Crea la primera con el botón de abajo.</div>
+    </div>
+
+    <div id="instDatos" hidden>
+      <h2 class="panel-t" id="instDatosT">Nueva instalación</h2>
+      <p class="panel-p">El tipo decide qué material puedes imputar.</p>
+      <div class="field">
+        <label for="instNum">Número de instalación</label>
+        <input id="instNum" type="text" inputmode="numeric" autocomplete="off" placeholder="Número de instalación">
+      </div>
+      <div class="field">
+        <label for="instTipo">Tipo de instalación</label>
+        <select id="instTipo"></select>
+      </div>
+      <div class="field">
+        <label for="instFecha">Fecha</label>
+        <input id="instFecha" type="date">
+      </div>
+      <div class="field">
+        <label for="instNotas">Notas (opcional)</label>
+        <input id="instNotas" type="text" autocomplete="off" placeholder="Incidencia, observaciones…">
+      </div>
+      <div class="err" id="instErr"></div>
+    </div>
+
+    <div id="instMat" hidden>
+      <button class="inst-head" id="instHead" title="Cambiar número, tipo o fecha"></button>
+      <div class="tools">
+        <div class="search">
+          <input id="instQ" type="search" placeholder="Buscar material" autocomplete="off" aria-label="Buscar material">
+        </div>
+      </div>
+      <div class="filters" id="instFiltros" role="group" aria-label="Filtros de material"></div>
+      <div class="count-line"><span class="dot"></span><span id="instMatCount"></span></div>
+      <ul class="list" id="instMatList"></ul>
+      <div class="empty" id="instMatEmpty" hidden><b>Sin resultados</b>Cambia la búsqueda o el filtro.</div>
+    </div>
+  </section>
 </main>
 
-<div class="bar">
+<div class="bar" id="barStock">
   <div class="wrap">
     <div class="stat"><b id="statTotal">0</b><span id="statSub">unidades</span></div>
     <button class="btn" id="wipe">Vaciar</button>
     <button class="btn" id="copy">Copiar resumen</button>
     <button class="btn primary" id="csv" hidden>Guardar CSV</button>
+  </div>
+</div>
+
+<div class="bar" id="barInst" hidden>
+  <div class="wrap">
+    <div class="stat"><b id="instStat">0</b><span id="instStatSub"></span></div>
+    <button class="btn" id="instCancel" hidden>Cancelar</button>
+    <button class="btn" id="instBorrar" hidden>Eliminar</button>
+    <button class="btn" id="instCopiar">Copiar resumen</button>
+    <button class="btn primary" id="instSeguir" hidden>Continuar</button>
+    <button class="btn primary" id="instGuardar" hidden>Guardar y descontar</button>
+    <button class="btn primary" id="instNueva">Nueva instalación</button>
   </div>
 </div>
 </div>
@@ -348,7 +472,7 @@
 
 <script>
 /* ===== referencias (todas a cero) ===== */
-const DATA = "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";
+const DATA = "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";
 let BASE = [];
 
 const TYPES = [
@@ -384,7 +508,7 @@ function save(){
     if(Object.keys(d).length) v[it.ref] = d;
   }
   try{
-    localStorage.setItem(LS, JSON.stringify({tech, values:v, touched:[...touched], updatedAt:Date.now()}));
+    localStorage.setItem(LS, JSON.stringify({tech, values:v, touched:[...touched], inst:instalaciones, updatedAt:Date.now()}));
   }catch(e){}
 }
 function load(){
@@ -393,6 +517,14 @@ function load(){
   if(!data) return false;
   if(data.tech && data.tech.nombre && data.tech.matricula) tech = data.tech;
   if(Array.isArray(data.touched)) data.touched.forEach(x=>touched.add(x));
+  if(Array.isArray(data.inst)){
+    instalaciones = data.inst.filter(g=>g && g.id && g.numero).map(g=>({
+      id:String(g.id), numero:String(g.numero), tipo:String(g.tipo||""),
+      fecha:String(g.fecha||""), notas:String(g.notas||""),
+      mats:(g.mats && typeof g.mats === "object") ? g.mats : {},
+      actualizada:Number(g.actualizada) || 0
+    }));
+  }
   if(data.values && typeof data.values === "object"){
     for(const [ref,v] of Object.entries(data.values)){
       const it = byRef.get(ref);
@@ -479,6 +611,20 @@ function visible(){
 }
 
 function render(){
+  const enInst = vista === "inst";
+  document.getElementById("viewStock").hidden = enInst;
+  document.getElementById("stockControls").hidden = enInst;
+  document.getElementById("barStock").hidden = enInst;
+  document.getElementById("viewInst").hidden = !enInst;
+  document.getElementById("barInst").hidden = !enInst;
+  document.querySelectorAll(".views button").forEach(b=>
+    b.setAttribute("aria-pressed", String((b.dataset.v === "inst") === enInst)));
+  if(enInst){
+    document.getElementById("instCopiar").hidden = !!borrador;
+    renderInst();
+    return;
+  }
+
   const t = TYPES.find(x=>x.key===activeType);
   document.documentElement.style.setProperty("--accent", t.color);
   document.getElementById("tec").textContent = `${tech.nombre} · ${tech.matricula}`;
@@ -620,6 +766,8 @@ document.getElementById("wipe").addEventListener("click", ()=>{
   if(!confirm(`Se pondrán a cero las ${contadas} referencias contadas. ¿Vaciar la hoja?`)) return;
   for(const it of items) for(const k of KEYS) it.cnt[k] = 0;
   touched.clear();
+  instalaciones = [];
+  borrador = null;
   save(); render();
 });
 
@@ -649,6 +797,404 @@ try{
 function arrancar(){
   const ready = load();
   if(ready) closeGate(); else openGate();
+}
+
+/* ===================== INSTALACIONES =====================
+   TIPOS de instalación. Cada uno lleva:
+   - base: material que se pone solo al crear la instalación
+   - materiales: "todas" o la lista de referencias que se pueden imputar */
+const MAT_ALARMA_HOGAR = [
+  "199013",
+  "120213","120221","120236","120264",
+  "121272","121295",
+  "131560","131561","131562","131563","131564","131565","131566","131567","131568",
+  "131581","131582","131790",
+  "134039V","134052V",
+  "135058","135104",
+  "205036","205086",
+  "322040V","322050V","322060V","322070","322080V","324540","327600",
+  "340001V",
+  "7002","7008","7014"
+];
+
+const MAT_ALARMA_NEGOCIO = [...MAT_ALARMA_HOGAR, "121770", "131179", "131179IN"];
+
+const TIPOS = [
+  {id:"alarma-hogar",         nombre:"Alarma Hogar",          base:{"199013":1}, materiales: MAT_ALARMA_HOGAR},
+  {id:"alarma-hogar-premium", nombre:"Alarma Hogar Premium",  base:{"199013":1}, materiales: MAT_ALARMA_HOGAR},
+  {id:"alarma-negocio",         nombre:"Alarma Negocio",         base:{"199013":1,"121770":1}, materiales: MAT_ALARMA_NEGOCIO},
+  {id:"alarma-negocio-premium", nombre:"Alarma Negocio Premium", base:{"199013":1,"121770":1}, materiales: MAT_ALARMA_NEGOCIO},
+  {id:"otro",                   nombre:"Otro (provisional)",     base:{},                     materiales:"todas"}
+];
+
+let vista = "stock";
+let instalaciones = [];
+let borrador = null;
+let instQuery = "";
+let instListQuery = "";
+let instFiltro = "todos";
+
+const hoyISO = ()=> new Date().toISOString().slice(0,10);
+const tipoNombre = id => (TIPOS.find(t=>t.id===id) || {nombre:id}).nombre;
+const piezas = mats => Object.values(mats||{}).reduce((a,n)=>a+n,0);
+
+function materialesDeTipo(id){
+  const t = TIPOS.find(x=>x.id===id);
+  const lista = (!t || t.materiales === "todas") ? items.slice() : (()=>{
+    const set = new Set(t.materiales);
+    return items.filter(i=>set.has(i.ref));
+  })();
+  if(t && t.base){
+    const base = Object.keys(t.base);
+    lista.sort((a,b)=>(base.includes(b.ref) ? 1 : 0) - (base.includes(a.ref) ? 1 : 0));
+  }
+  return lista;
+}
+function fechaCorta(iso){
+  if(!iso) return "";
+  const [a,m,d] = iso.split("-");
+  return d && m ? `${d}/${m}/${a.slice(2)}` : iso;
+}
+
+function setVista(v){ vista = v; borrador = null; render(); }
+
+function nuevaInstalacion(){
+  borrador = {id:null, numero:"", tipo:TIPOS[0].id, fecha:hoyISO(), notas:"", mats:{}, paso:"datos"};
+  instQuery = ""; instFiltro = "todos";
+  render();
+}
+function esBase(ref, tipo){
+  const t = TIPOS.find(x=>x.id === tipo);
+  return !!(t && t.base && t.base[ref]);
+}
+function abrirInstalacion(id){
+  const g = instalaciones.find(x=>x.id===id);
+  if(!g) return;
+  borrador = {id:g.id, numero:g.numero, tipo:g.tipo, fecha:g.fecha, notas:g.notas||"", mats:{...g.mats}, paso:"material", baseTipo:g.tipo};
+  instQuery = ""; instFiltro = "todos";
+  render();
+}
+function volverALista(){
+  if(borrador && borrador.paso === "material" && piezas(borrador.mats) > 0){
+    const guardada = borrador.id ? instalaciones.find(x=>x.id===borrador.id) : null;
+    const mismo = guardada && JSON.stringify(guardada.mats) === JSON.stringify(borrador.mats);
+    if(!mismo && !confirm("Saldrás sin guardar y se pierde el material que has puesto. ¿Salir?")) return;
+  }
+  borrador = null; render();
+}
+
+function pasarAMaterial(){
+  const num = document.getElementById("instNum").value.trim();
+  const err = document.getElementById("instErr");
+  if(num.length < 3){ err.textContent = "Escribe el número de instalación."; return; }
+  const repe = instalaciones.find(x=>x.numero === num && x.id !== borrador.id);
+  if(repe && !confirm(`Ya hay una instalación guardada con el número ${num}. ¿Crear otra igualmente?`)) return;
+
+  const tipoNuevo = document.getElementById("instTipo").value;
+  const t = TIPOS.find(x=>x.id === tipoNuevo) || {};
+
+  // material que no cabe en el tipo elegido
+  if(Array.isArray(t.materiales)){
+    const ok = new Set(t.materiales);
+    const fuera = Object.keys(borrador.mats).filter(r=>!ok.has(r));
+    if(fuera.length){
+      const nombres = fuera.slice(0,5).join(", ") + (fuera.length > 5 ? `, y ${fuera.length-5} más` : "");
+      if(!confirm(`En «${t.nombre}» no se puede imputar: ${nombres}. Se quitará de esta instalación. ¿Seguir?`)) return;
+      fuera.forEach(r=>delete borrador.mats[r]);
+    }
+  }
+
+  borrador.numero = num;
+  borrador.tipo = tipoNuevo;
+  borrador.fecha = document.getElementById("instFecha").value || hoyISO();
+  borrador.notas = document.getElementById("instNotas").value.trim();
+
+  // material de base del tipo, solo la primera vez que se entra con ese tipo
+  if(t.base && borrador.baseTipo !== tipoNuevo){
+    for(const [ref,n] of Object.entries(t.base)){
+      if(!borrador.mats[ref]) borrador.mats[ref] = n;
+    }
+    borrador.baseTipo = tipoNuevo;
+  }
+
+  borrador.paso = "material";
+  render();
+}
+
+function cambiarMat(ref, delta){
+  const n = (borrador.mats[ref] || 0) + delta;
+  if(n <= 0) delete borrador.mats[ref]; else borrador.mats[ref] = n;
+  render();
+}
+function ponerMat(ref, valor){
+  const n = Math.round(Number(valor));
+  if(!Number.isFinite(n) || n <= 0) delete borrador.mats[ref]; else borrador.mats[ref] = n;
+  render();
+}
+
+function guardarInstalacion(){
+  const total = piezas(borrador.mats);
+  if(total === 0){ toast("No has puesto material en esta instalación"); return; }
+  const anterior = borrador.id ? ((instalaciones.find(x=>x.id===borrador.id) || {}).mats || {}) : {};
+  const refs = new Set([...Object.keys(borrador.mats), ...Object.keys(anterior)]);
+
+  const faltan = [];
+  for(const ref of refs){
+    const d = (borrador.mats[ref]||0) - (anterior[ref]||0);
+    const it = byRef.get(ref);
+    if(it && d > 0 && it.cnt.p - d < 0) faltan.push(`${ref} (contadas ${it.cnt.p})`);
+  }
+  if(faltan.length){
+    const lista = faltan.slice(0,5).join(", ") + (faltan.length > 5 ? `, y ${faltan.length-5} más` : "");
+    if(!confirm(`Vas a imputar más de lo que tienes contado en: ${lista}. ¿Guardar igualmente?`)) return;
+  }
+
+  for(const ref of refs){
+    const d = (borrador.mats[ref]||0) - (anterior[ref]||0);
+    const it = byRef.get(ref);
+    if(it && d !== 0){ it.cnt.p -= d; touched.add(ref+"|p"); }
+  }
+
+  const reg = {
+    id: borrador.id || ("i" + Date.now().toString(36)),
+    numero: borrador.numero, tipo: borrador.tipo, fecha: borrador.fecha,
+    notas: borrador.notas, mats: {...borrador.mats}, actualizada: Date.now()
+  };
+  const i = instalaciones.findIndex(x=>x.id === reg.id);
+  if(i >= 0) instalaciones[i] = reg; else instalaciones.unshift(reg);
+
+  const editada = i >= 0;
+  borrador = null;
+  save(); render();
+  toast(`Instalación ${reg.numero} ${editada ? "actualizada" : "guardada"} · ${total} piezas`);
+}
+
+function borrarInstalacion(id){
+  const g = instalaciones.find(x=>x.id === id);
+  if(!g) return;
+  if(!confirm(`Se elimina la instalación ${g.numero} y sus ${piezas(g.mats)} piezas vuelven al stock. ¿Seguir?`)) return;
+  for(const [ref,n] of Object.entries(g.mats)){
+    const it = byRef.get(ref);
+    if(it){ it.cnt.p += n; touched.add(ref+"|p"); }
+  }
+  instalaciones = instalaciones.filter(x=>x.id !== id);
+  borrador = null;
+  save(); render();
+  toast(`Instalación ${g.numero} eliminada · material devuelto`);
+}
+
+/* ---------- pintado de instalaciones ---------- */
+function renderInst(){
+  const paso = borrador ? borrador.paso : "lista";
+  document.getElementById("instLista").hidden = paso !== "lista";
+  document.getElementById("instDatos").hidden = paso !== "datos";
+  document.getElementById("instMat").hidden = paso !== "material";
+
+  document.getElementById("instNueva").hidden = paso !== "lista";
+  document.getElementById("instCancel").hidden = paso === "lista";
+  document.getElementById("instSeguir").hidden = paso !== "datos";
+  document.getElementById("instGuardar").hidden = paso !== "material";
+  document.getElementById("instBorrar").hidden = !(paso === "material" && borrador.id);
+
+  if(paso === "lista") renderInstLista();
+  else if(paso === "datos") renderInstDatos();
+  else renderInstMaterial();
+}
+
+function renderInstLista(){
+  const q = instListQuery.trim().toLowerCase();
+  const rows = instalaciones
+    .filter(g=>!q || g.numero.toLowerCase().includes(q) || tipoNombre(g.tipo).toLowerCase().includes(q) || (g.notas||"").toLowerCase().includes(q))
+    .sort((a,b)=>(b.fecha||"").localeCompare(a.fecha||"") || b.actualizada - a.actualizada);
+
+  const ul = document.getElementById("instList");
+  ul.innerHTML = "";
+  document.getElementById("instEmpty").hidden = rows.length > 0;
+
+  for(const g of rows){
+    const li = document.createElement("li");
+    li.className = "inst";
+    const info = document.createElement("div");
+    const num = document.createElement("div"); num.className = "num"; num.textContent = g.numero;
+    const meta = document.createElement("div"); meta.className = "meta";
+    meta.textContent = `${tipoNombre(g.tipo)} · ${fechaCorta(g.fecha)} · ${piezas(g.mats)} piezas` + (g.notas ? ` · ${g.notas}` : "");
+    info.append(num, meta);
+
+    const acc = document.createElement("div"); acc.className = "acc";
+    const ver = document.createElement("button");
+    ver.className = "mini"; ver.textContent = "Abrir";
+    ver.addEventListener("click", ()=>abrirInstalacion(g.id));
+    const del = document.createElement("button");
+    del.className = "mini danger"; del.textContent = "✕";
+    del.title = "Eliminar y devolver el material al stock";
+    del.setAttribute("aria-label", `Eliminar la instalación ${g.numero}`);
+    del.addEventListener("click", ()=>borrarInstalacion(g.id));
+    acc.append(ver, del);
+
+    li.append(info, acc);
+    ul.appendChild(li);
+  }
+
+  const totalPiezas = instalaciones.reduce((a,g)=>a+piezas(g.mats), 0);
+  document.getElementById("instCount").textContent =
+    `${rows.length} de ${instalaciones.length} instalaciones`;
+  document.getElementById("instStat").textContent = instalaciones.length;
+  document.getElementById("instStatSub").textContent =
+    `instalaciones · ${totalPiezas} piezas imputadas`;
+}
+
+function renderInstDatos(){
+  const sel = document.getElementById("instTipo");
+  if(!sel.dataset.built){
+    for(const t of TIPOS){
+      const o = document.createElement("option");
+      o.value = t.id; o.textContent = t.nombre;
+      sel.appendChild(o);
+    }
+    sel.dataset.built = "1";
+  }
+  document.getElementById("instDatosT").textContent = borrador.id ? "Datos de la instalación" : "Nueva instalación";
+  document.getElementById("instNum").value = borrador.numero;
+  sel.value = borrador.tipo;
+  document.getElementById("instFecha").value = borrador.fecha;
+  document.getElementById("instNotas").value = borrador.notas;
+  const tSel = TIPOS.find(x=>x.id === sel.value);
+  const nBase = tSel && tSel.base ? Object.keys(tSel.base).length : 0;
+  document.getElementById("instStat").textContent = "—";
+  document.getElementById("instStatSub").textContent = nBase
+    ? `este tipo ya trae ${nBase} artículo${nBase>1?"s":""} de base`
+    : "datos de la instalación";
+}
+
+function renderInstMaterial(){
+  const head = document.getElementById("instHead");
+  head.innerHTML = "<b></b><span></span>";
+  head.querySelector("b").textContent = borrador.numero;
+  head.querySelector("span").textContent =
+    `${tipoNombre(borrador.tipo)} · ${fechaCorta(borrador.fecha)} · toca para cambiar los datos`;
+
+  const fl = document.getElementById("instFiltros");
+  if(!fl.dataset.built){
+    for(const [k,label] of [["todos","Todo el material"],["puestas","En esta instalación"],["stock","Con unidades contadas"]]){
+      const c = document.createElement("button");
+      c.className = "chip"; c.textContent = label; c.dataset.k = k;
+      c.addEventListener("click", ()=>{ instFiltro = (instFiltro===k && k!=="todos") ? "todos" : k; render(); });
+      fl.appendChild(c);
+    }
+    fl.dataset.built = "1";
+  }
+  fl.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed", String(c.dataset.k === instFiltro)));
+
+  const permitidos = materialesDeTipo(borrador.tipo);
+  const q = instQuery.trim().toLowerCase();
+  const rows = permitidos.filter(it=>{
+    if(q && !(it.ref.toLowerCase().includes(q) || it.name.toLowerCase().includes(q))) return false;
+    if(instFiltro === "puestas" && !borrador.mats[it.ref]) return false;
+    if(instFiltro === "stock" && it.cnt.p <= 0 && !borrador.mats[it.ref]) return false;
+    return true;
+  });
+
+  const ul = document.getElementById("instMatList");
+  ul.innerHTML = "";
+  document.getElementById("instMatEmpty").hidden = rows.length > 0;
+
+  for(const it of rows){
+    const puesto = borrador.mats[it.ref] || 0;
+    const li = document.createElement("li");
+    li.className = "row" + (puesto ? " has" : "");
+
+    const info = document.createElement("div"); info.className = "info";
+    const ref = document.createElement("div"); ref.className = "ref"; ref.textContent = it.ref;
+    const name = document.createElement("div"); name.className = "name"; name.textContent = it.name; name.title = it.name;
+    const others = document.createElement("div"); others.className = "others";
+    if(esBase(it.ref, borrador.tipo)){
+      const b = document.createElement("span");
+      b.className = "stock-pill base";
+      b.textContent = "Base del tipo";
+      others.appendChild(b);
+    }
+    const sp = document.createElement("span");
+    const queda = it.cnt.p - puesto;
+    sp.className = "stock-pill" + (queda < 0 ? " poco" : "");
+    sp.textContent = puesto ? `Contado ${it.cnt.p} → ${queda}` : `Contado ${it.cnt.p}`;
+    others.appendChild(sp);
+    info.append(ref, name, others);
+
+    const st = document.createElement("div"); st.className = "stepper";
+    const minus = document.createElement("button");
+    minus.className = "step minus"; minus.textContent = "−";
+    minus.setAttribute("aria-label", `Quitar una unidad de ${it.ref}`);
+    minus.addEventListener("click", ()=>cambiarMat(it.ref, -1));
+
+    const qty = document.createElement("input");
+    qty.className = "qty" + (puesto ? "" : " zero");
+    qty.type = "number"; qty.inputMode = "numeric"; qty.value = String(puesto);
+    qty.setAttribute("aria-label", `Unidades de ${it.ref} en esta instalación`);
+    qty.addEventListener("focus", ()=>qty.select());
+    qty.addEventListener("change", ()=>ponerMat(it.ref, qty.value));
+    qty.addEventListener("keydown", e=>{ if(e.key === "Enter") qty.blur(); });
+
+    const plus = document.createElement("button");
+    plus.className = "step"; plus.textContent = "+";
+    plus.setAttribute("aria-label", `Añadir una unidad de ${it.ref}`);
+    plus.addEventListener("click", ()=>cambiarMat(it.ref, 1));
+
+    st.append(minus, qty, plus);
+    li.append(info, st);
+    ul.appendChild(li);
+  }
+
+  const t = TIPOS.find(x=>x.id === borrador.tipo);
+  const alcance = (!t || t.materiales === "todas") ? "todo el catálogo" : `${permitidos.length} referencias de este tipo`;
+  document.getElementById("instMatCount").textContent = `${rows.length} de ${permitidos.length} · ${alcance}`;
+  document.getElementById("instStat").textContent = piezas(borrador.mats);
+  document.getElementById("instStatSub").textContent =
+    `piezas · ${Object.keys(borrador.mats).length} referencias`;
+}
+
+/* ---------- controles ---------- */
+document.querySelectorAll(".views button").forEach(b=>{
+  b.addEventListener("click", ()=>setVista(b.dataset.v));
+});
+document.getElementById("instNueva").addEventListener("click", nuevaInstalacion);
+document.getElementById("instCopiar").addEventListener("click", copiarInstalaciones);
+document.getElementById("instSeguir").addEventListener("click", pasarAMaterial);
+document.getElementById("instGuardar").addEventListener("click", guardarInstalacion);
+document.getElementById("instCancel").addEventListener("click", volverALista);
+document.getElementById("instBorrar").addEventListener("click", ()=>{ if(borrador && borrador.id) borrarInstalacion(borrador.id); });
+document.getElementById("instHead").addEventListener("click", ()=>{ if(borrador){ borrador.paso = "datos"; render(); } });
+document.getElementById("instQ").addEventListener("input", e=>{ instQuery = e.target.value; render(); });
+document.getElementById("instListQ").addEventListener("input", e=>{ instListQuery = e.target.value; render(); });
+document.getElementById("instNum").addEventListener("input", ()=>{ document.getElementById("instErr").textContent = ""; });
+document.getElementById("instNum").addEventListener("keydown", e=>{ if(e.key === "Enter") pasarAMaterial(); });
+document.getElementById("instTipo").addEventListener("change", ()=>{ if(borrador && borrador.paso === "datos") renderInstDatos(); });
+
+function resumenInstalaciones(){
+  const fecha = new Date().toLocaleString("es-ES",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
+  const l = [`Instalaciones — ${tech.nombre} (${tech.matricula})`, fecha, ""];
+  if(!instalaciones.length) l.push("Sin instalaciones registradas.");
+  for(const g of instalaciones){
+    l.push(`${g.numero} · ${tipoNombre(g.tipo)} · ${fechaCorta(g.fecha)}${g.notas ? " · " + g.notas : ""}`);
+    for(const [ref,n] of Object.entries(g.mats)){
+      const it = byRef.get(ref);
+      l.push(`   ${ref} · ${it ? it.name : ""} — ${n}`);
+    }
+    l.push("");
+  }
+  const total = instalaciones.reduce((a,g)=>a+piezas(g.mats),0);
+  l.push(`${instalaciones.length} instalaciones · ${total} piezas`);
+  return l.join("\n");
+}
+async function copiarInstalaciones(){
+  const txt = resumenInstalaciones();
+  try{
+    await navigator.clipboard.writeText(txt);
+    toast("Resumen copiado");
+  }catch(e){
+    document.getElementById("sheetText").value = txt;
+    document.getElementById("sheet").hidden = false;
+    document.getElementById("sheetText").select();
+  }
 }
 
 /* ---------- acceso: el catálogo va cifrado (AES-GCM + PBKDF2) ---------- */
