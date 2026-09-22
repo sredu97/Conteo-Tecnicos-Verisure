@@ -276,6 +276,14 @@
   }
   .stock-pill.poco{color:var(--defectuoso);border-color:var(--defectuoso)}
   .stock-pill.base{color:var(--brand);border-color:var(--brand);border-style:solid}
+  .fichero{font-size:12.5px;color:var(--text-soft);margin-top:6px}
+  .pega{margin-top:10px}
+  .pega summary{font-size:13px;color:var(--text-soft);cursor:pointer}
+  .pega textarea{
+    width:100%;margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:9px;
+    background:var(--card-2);color:var(--text);font-family:ui-monospace,Menlo,monospace;font-size:12.5px;
+  }
+  .pega .mini{margin-top:8px}
 
   /* ---------- acceso ---------- */
   .lock{
@@ -362,7 +370,8 @@
     </div>
     <nav class="views" role="group" aria-label="Secciones">
       <button data-v="stock" aria-pressed="true">Conteo</button>
-      <button data-v="inst" aria-pressed="false">Instalaciones</button>
+      <button data-v="trabajo" aria-pressed="false">Trabajos</button>
+      <button data-v="pedido" aria-pressed="false">Pedidos</button>
     </nav>
 
     <div id="stockControls">
@@ -404,12 +413,23 @@
       <h2 class="panel-t" id="instDatosT">Nueva instalación</h2>
       <p class="panel-p">El tipo decide qué material puedes imputar.</p>
       <div class="field">
-        <label for="instNum">Número de instalación</label>
+        <label for="instNum" id="instNumLabel">Número de instalación</label>
         <input id="instNum" type="text" inputmode="numeric" autocomplete="off" placeholder="Número de instalación">
       </div>
-      <div class="field">
-        <label for="instTipo">Tipo de instalación</label>
+      <div class="field" id="instTipoField">
+        <label for="instTipo">Tipo</label>
         <select id="instTipo"></select>
+      </div>
+
+      <div class="field" id="pedidoBox" hidden>
+        <label for="pedidoPdf">Albarán en PDF</label>
+        <input id="pedidoPdf" type="file" accept="application/pdf,.pdf">
+        <div class="fichero" id="pedidoEstado">Sube el albarán y leeré las referencias. Podrás revisarlas antes de sumar nada.</div>
+        <details class="pega">
+          <summary>El PDF no se deja leer</summary>
+          <textarea id="pedidoTexto" rows="4" placeholder="Pega aquí el texto del albarán"></textarea>
+          <button class="mini" id="pedidoLeerTexto" type="button">Leer el texto pegado</button>
+        </details>
       </div>
       <div class="field">
         <label for="instFecha">Fecha</label>
@@ -508,7 +528,7 @@ function save(){
     if(Object.keys(d).length) v[it.ref] = d;
   }
   try{
-    localStorage.setItem(LS, JSON.stringify({tech, values:v, touched:[...touched], inst:instalaciones, updatedAt:Date.now()}));
+    localStorage.setItem(LS, JSON.stringify({tech, values:v, touched:[...touched], trabajos:trabajos, pedidos:pedidos, updatedAt:Date.now()}));
   }catch(e){}
 }
 function load(){
@@ -517,13 +537,19 @@ function load(){
   if(!data) return false;
   if(data.tech && data.tech.nombre && data.tech.matricula) tech = data.tech;
   if(Array.isArray(data.touched)) data.touched.forEach(x=>touched.add(x));
-  if(Array.isArray(data.inst)){
-    instalaciones = data.inst.filter(g=>g && g.id && g.numero).map(g=>({
-      id:String(g.id), numero:String(g.numero), tipo:String(g.tipo||""),
-      fecha:String(g.fecha||""), notas:String(g.notas||""),
-      mats:(g.mats && typeof g.mats === "object") ? g.mats : {},
-      actualizada:Number(g.actualizada) || 0
-    }));
+  const limpiar = arr => arr.filter(g=>g && g.id && g.numero).map(g=>({
+    id:String(g.id), numero:String(g.numero), tipo:String(g.tipo||""),
+    fecha:String(g.fecha||""), notas:String(g.notas||""),
+    mats:(g.mats && typeof g.mats === "object") ? g.mats : {},
+    actualizada:Number(g.actualizada) || 0
+  }));
+  if(Array.isArray(data.trabajos)) trabajos = limpiar(data.trabajos);
+  if(Array.isArray(data.pedidos)) pedidos = limpiar(data.pedidos);
+  // listados antiguos: instalaciones y mantenimientos pasan a ser trabajos
+  const viejos = [].concat(Array.isArray(data.inst) ? data.inst : [], Array.isArray(data.mant) ? data.mant : []);
+  if(viejos.length){
+    const ids = new Set(trabajos.map(g=>g.id));
+    trabajos = trabajos.concat(limpiar(viejos).filter(g=>!ids.has(g.id)));
   }
   if(data.values && typeof data.values === "object"){
     for(const [ref,v] of Object.entries(data.values)){
@@ -611,14 +637,15 @@ function visible(){
 }
 
 function render(){
-  const enInst = vista === "inst";
+  const enInst = vista !== "stock";
+  if(enInst) ambito = vista;
   document.getElementById("viewStock").hidden = enInst;
   document.getElementById("stockControls").hidden = enInst;
   document.getElementById("barStock").hidden = enInst;
   document.getElementById("viewInst").hidden = !enInst;
   document.getElementById("barInst").hidden = !enInst;
   document.querySelectorAll(".views button").forEach(b=>
-    b.setAttribute("aria-pressed", String((b.dataset.v === "inst") === enInst)));
+    b.setAttribute("aria-pressed", String(b.dataset.v === vista)));
   if(enInst){
     document.getElementById("instCopiar").hidden = !!borrador;
     renderInst();
@@ -766,7 +793,8 @@ document.getElementById("wipe").addEventListener("click", ()=>{
   if(!confirm(`Se pondrán a cero las ${contadas} referencias contadas. ¿Vaciar la hoja?`)) return;
   for(const it of items) for(const k of KEYS) it.cnt[k] = 0;
   touched.clear();
-  instalaciones = [];
+  trabajos = [];
+  pedidos = [];
   borrador = null;
   save(); render();
 });
@@ -819,7 +847,7 @@ const MAT_ALARMA_HOGAR = [
 
 const MAT_ALARMA_NEGOCIO = [...MAT_ALARMA_HOGAR, "121770", "131179", "131179IN"];
 
-const TIPOS = [
+const TIPOS_INST = [
   {id:"alarma-hogar",         nombre:"Alarma Hogar",          base:{"199013":1}, materiales: MAT_ALARMA_HOGAR},
   {id:"alarma-hogar-premium", nombre:"Alarma Hogar Premium",  base:{"199013":1}, materiales: MAT_ALARMA_HOGAR},
   {id:"alarma-negocio",         nombre:"Alarma Negocio",         base:{"199013":1,"121770":1}, materiales: MAT_ALARMA_NEGOCIO},
@@ -827,19 +855,41 @@ const TIPOS = [
   {id:"otro",                   nombre:"Otro (provisional)",     base:{},                     materiales:"todas"}
 ];
 
+/* Mantenimientos: sin material de base y con el catálogo completo disponible. */
+const TIPOS_MANT = [
+  {id:"mantenimiento", nombre:"Mantenimiento", base:{}, materiales:"todas"}
+];
+
+/* Trabajos: instalaciones y mantenimientos en un solo listado, el tipo los distingue. */
+const TIPOS_TRABAJO = [...TIPOS_INST, ...TIPOS_MANT];
+const TIPOS_PEDIDO = [{id:"albaran", nombre:"Albarán de pedido", base:{}, materiales:"todas"}];
+
+const AMBITOS = {
+  trabajo: {tipos:TIPOS_TRABAJO, signo:-1, nuevo:"Nuevo trabajo", uno:"trabajo", Uno:"Trabajo",
+            plural:"trabajos", sin:"Sin trabajos", guardar:"Guardar y descontar", numero:"Número de instalación"},
+  pedido:  {tipos:TIPOS_PEDIDO,  signo:+1, nuevo:"Nuevo pedido",  uno:"pedido",  Uno:"Pedido",
+            plural:"pedidos",  sin:"Sin pedidos",  guardar:"Confirmar y sumar al stock", numero:"Número de albarán"}
+};
+let ambito = "trabajo";
+const L = ()=> AMBITOS[ambito];
+const tiposActuales = ()=> L().tipos;
+const registros = ()=> ambito === "trabajo" ? trabajos : pedidos;
+const setRegistros = arr => { if(ambito === "trabajo") trabajos = arr; else pedidos = arr; };
+
 let vista = "stock";
-let instalaciones = [];
+let trabajos = [];
+let pedidos = [];
 let borrador = null;
 let instQuery = "";
 let instListQuery = "";
 let instFiltro = "todos";
 
 const hoyISO = ()=> new Date().toISOString().slice(0,10);
-const tipoNombre = id => (TIPOS.find(t=>t.id===id) || {nombre:id}).nombre;
+const tipoNombre = id => (tiposActuales().find(t=>t.id===id) || {nombre:id}).nombre;
 const piezas = mats => Object.values(mats||{}).reduce((a,n)=>a+n,0);
 
 function materialesDeTipo(id){
-  const t = TIPOS.find(x=>x.id===id);
+  const t = tiposActuales().find(x=>x.id===id);
   const lista = (!t || t.materiales === "todas") ? items.slice() : (()=>{
     const set = new Set(t.materiales);
     return items.filter(i=>set.has(i.ref));
@@ -856,19 +906,24 @@ function fechaCorta(iso){
   return d && m ? `${d}/${m}/${a.slice(2)}` : iso;
 }
 
-function setVista(v){ vista = v; borrador = null; render(); }
+function setVista(v){
+  vista = v;
+  if(v !== "stock") ambito = v;
+  borrador = null;
+  render();
+}
 
 function nuevaInstalacion(){
-  borrador = {id:null, numero:"", tipo:TIPOS[0].id, fecha:hoyISO(), notas:"", mats:{}, paso:"datos"};
+  borrador = {id:null, numero:"", tipo:tiposActuales()[0].id, fecha:hoyISO(), notas:"", mats:{}, paso:"datos"};
   instQuery = ""; instFiltro = "todos";
   render();
 }
 function esBase(ref, tipo){
-  const t = TIPOS.find(x=>x.id === tipo);
+  const t = tiposActuales().find(x=>x.id === tipo);
   return !!(t && t.base && t.base[ref]);
 }
 function abrirInstalacion(id){
-  const g = instalaciones.find(x=>x.id===id);
+  const g = registros().find(x=>x.id===id);
   if(!g) return;
   borrador = {id:g.id, numero:g.numero, tipo:g.tipo, fecha:g.fecha, notas:g.notas||"", mats:{...g.mats}, paso:"material", baseTipo:g.tipo};
   instQuery = ""; instFiltro = "todos";
@@ -876,7 +931,7 @@ function abrirInstalacion(id){
 }
 function volverALista(){
   if(borrador && borrador.paso === "material" && piezas(borrador.mats) > 0){
-    const guardada = borrador.id ? instalaciones.find(x=>x.id===borrador.id) : null;
+    const guardada = borrador.id ? registros().find(x=>x.id===borrador.id) : null;
     const mismo = guardada && JSON.stringify(guardada.mats) === JSON.stringify(borrador.mats);
     if(!mismo && !confirm("Saldrás sin guardar y se pierde el material que has puesto. ¿Salir?")) return;
   }
@@ -887,11 +942,11 @@ function pasarAMaterial(){
   const num = document.getElementById("instNum").value.trim();
   const err = document.getElementById("instErr");
   if(num.length < 3){ err.textContent = "Escribe el número de instalación."; return; }
-  const repe = instalaciones.find(x=>x.numero === num && x.id !== borrador.id);
-  if(repe && !confirm(`Ya hay una instalación guardada con el número ${num}. ¿Crear otra igualmente?`)) return;
+  const repe = registros().find(x=>x.numero === num && x.id !== borrador.id);
+  if(repe && !confirm(`Ya hay un registro guardado con el número ${num} en ${L().plural}. ¿Crear otro igualmente?`)) return;
 
   const tipoNuevo = document.getElementById("instTipo").value;
-  const t = TIPOS.find(x=>x.id === tipoNuevo) || {};
+  const t = tiposActuales().find(x=>x.id === tipoNuevo) || {};
 
   // material que no cabe en el tipo elegido
   if(Array.isArray(t.materiales)){
@@ -934,14 +989,16 @@ function ponerMat(ref, valor){
 
 function guardarInstalacion(){
   const total = piezas(borrador.mats);
-  if(total === 0){ toast("No has puesto material en esta instalación"); return; }
-  const anterior = borrador.id ? ((instalaciones.find(x=>x.id===borrador.id) || {}).mats || {}) : {};
+  if(total === 0){ toast(`No has puesto material en este registro de ${L().plural}`); return; }
+  const anterior = borrador.id ? ((registros().find(x=>x.id===borrador.id) || {}).mats || {}) : {};
   const refs = new Set([...Object.keys(borrador.mats), ...Object.keys(anterior)]);
 
+  const signo = L().signo;
   const faltan = [];
   for(const ref of refs){
     const d = (borrador.mats[ref]||0) - (anterior[ref]||0);
     const it = byRef.get(ref);
+    if(signo > 0) continue;
     if(it && d > 0 && it.cnt.p - d < 0) faltan.push(`${ref} (contadas ${it.cnt.p})`);
   }
   if(faltan.length){
@@ -952,7 +1009,7 @@ function guardarInstalacion(){
   for(const ref of refs){
     const d = (borrador.mats[ref]||0) - (anterior[ref]||0);
     const it = byRef.get(ref);
-    if(it && d !== 0){ it.cnt.p -= d; touched.add(ref+"|p"); }
+    if(it && d !== 0){ it.cnt.p += signo * d; touched.add(ref+"|p"); }
   }
 
   const reg = {
@@ -960,27 +1017,28 @@ function guardarInstalacion(){
     numero: borrador.numero, tipo: borrador.tipo, fecha: borrador.fecha,
     notas: borrador.notas, mats: {...borrador.mats}, actualizada: Date.now()
   };
-  const i = instalaciones.findIndex(x=>x.id === reg.id);
-  if(i >= 0) instalaciones[i] = reg; else instalaciones.unshift(reg);
+  const lista = registros();
+  const i = lista.findIndex(x=>x.id === reg.id);
+  if(i >= 0) lista[i] = reg; else lista.unshift(reg);
 
   const editada = i >= 0;
   borrador = null;
   save(); render();
-  toast(`Instalación ${reg.numero} ${editada ? "actualizada" : "guardada"} · ${total} piezas`);
+  toast(`${L().Uno} ${reg.numero} ${editada ? "actualizado" : "guardado"} · ${total} piezas`);
 }
 
 function borrarInstalacion(id){
-  const g = instalaciones.find(x=>x.id === id);
+  const g = registros().find(x=>x.id === id);
   if(!g) return;
-  if(!confirm(`Se elimina la instalación ${g.numero} y sus ${piezas(g.mats)} piezas vuelven al stock. ¿Seguir?`)) return;
+  if(!confirm(`Se elimina el ${L().uno} ${g.numero}. Sus ${piezas(g.mats)} piezas ${L().signo < 0 ? "vuelven al" : "se restan del"} stock. ¿Seguir?`)) return;
   for(const [ref,n] of Object.entries(g.mats)){
     const it = byRef.get(ref);
-    if(it){ it.cnt.p += n; touched.add(ref+"|p"); }
+    if(it){ it.cnt.p -= L().signo * n; touched.add(ref+"|p"); }
   }
-  instalaciones = instalaciones.filter(x=>x.id !== id);
+  setRegistros(registros().filter(x=>x.id !== id));
   borrador = null;
   save(); render();
-  toast(`Instalación ${g.numero} eliminada · material devuelto`);
+  toast(`${L().Uno} ${g.numero} eliminado · stock corregido`);
 }
 
 /* ---------- pintado de instalaciones ---------- */
@@ -996,6 +1054,11 @@ function renderInst(){
   document.getElementById("instGuardar").hidden = paso !== "material";
   document.getElementById("instBorrar").hidden = !(paso === "material" && borrador.id);
 
+  document.getElementById("instNueva").textContent = L().nuevo;
+  document.getElementById("instGuardar").textContent = L().guardar;
+  document.getElementById("instNumLabel").textContent = L().numero;
+  document.getElementById("instTipoField").hidden = ambito === "pedido";
+  document.getElementById("pedidoBox").hidden = ambito !== "pedido";
   if(paso === "lista") renderInstLista();
   else if(paso === "datos") renderInstDatos();
   else renderInstMaterial();
@@ -1003,13 +1066,19 @@ function renderInst(){
 
 function renderInstLista(){
   const q = instListQuery.trim().toLowerCase();
-  const rows = instalaciones
+  const rows = registros()
     .filter(g=>!q || g.numero.toLowerCase().includes(q) || tipoNombre(g.tipo).toLowerCase().includes(q) || (g.notas||"").toLowerCase().includes(q))
     .sort((a,b)=>(b.fecha||"").localeCompare(a.fecha||"") || b.actualizada - a.actualizada);
 
   const ul = document.getElementById("instList");
   ul.innerHTML = "";
-  document.getElementById("instEmpty").hidden = rows.length > 0;
+  const vacio = document.getElementById("instEmpty");
+  vacio.hidden = rows.length > 0;
+  vacio.innerHTML = "";
+  const vb = document.createElement("b"); vb.textContent = L().sin;
+  vacio.append(vb, document.createTextNode(registros().length
+    ? "Nada coincide con la búsqueda."
+    : "Crea el primero con el botón de abajo."));
 
   for(const g of rows){
     const li = document.createElement("li");
@@ -1027,7 +1096,7 @@ function renderInstLista(){
     const del = document.createElement("button");
     del.className = "mini danger"; del.textContent = "✕";
     del.title = "Eliminar y devolver el material al stock";
-    del.setAttribute("aria-label", `Eliminar la instalación ${g.numero}`);
+    del.setAttribute("aria-label", `Eliminar ${g.numero}`);
     del.addEventListener("click", ()=>borrarInstalacion(g.id));
     acc.append(ver, del);
 
@@ -1035,35 +1104,36 @@ function renderInstLista(){
     ul.appendChild(li);
   }
 
-  const totalPiezas = instalaciones.reduce((a,g)=>a+piezas(g.mats), 0);
+  const totalPiezas = registros().reduce((a,g)=>a+piezas(g.mats), 0);
   document.getElementById("instCount").textContent =
-    `${rows.length} de ${instalaciones.length} instalaciones`;
-  document.getElementById("instStat").textContent = instalaciones.length;
+    `${rows.length} de ${registros().length} ${L().plural}`;
+  document.getElementById("instStat").textContent = registros().length;
   document.getElementById("instStatSub").textContent =
-    `instalaciones · ${totalPiezas} piezas imputadas`;
+    `${L().plural} · ${totalPiezas} piezas imputadas`;
 }
 
 function renderInstDatos(){
   const sel = document.getElementById("instTipo");
-  if(!sel.dataset.built){
-    for(const t of TIPOS){
+  if(sel.dataset.built !== ambito){
+    sel.innerHTML = "";
+    for(const t of tiposActuales()){
       const o = document.createElement("option");
       o.value = t.id; o.textContent = t.nombre;
       sel.appendChild(o);
     }
-    sel.dataset.built = "1";
+    sel.dataset.built = ambito;
   }
-  document.getElementById("instDatosT").textContent = borrador.id ? "Datos de la instalación" : "Nueva instalación";
+  document.getElementById("instDatosT").textContent = borrador.id ? `Datos · ${L().Uno}` : L().nuevo;
   document.getElementById("instNum").value = borrador.numero;
   sel.value = borrador.tipo;
   document.getElementById("instFecha").value = borrador.fecha;
   document.getElementById("instNotas").value = borrador.notas;
-  const tSel = TIPOS.find(x=>x.id === sel.value);
+  const tSel = tiposActuales().find(x=>x.id === sel.value);
   const nBase = tSel && tSel.base ? Object.keys(tSel.base).length : 0;
   document.getElementById("instStat").textContent = "—";
   document.getElementById("instStatSub").textContent = nBase
     ? `este tipo ya trae ${nBase} artículo${nBase>1?"s":""} de base`
-    : "datos de la instalación";
+    : `datos · ${L().uno}`;
 }
 
 function renderInstMaterial(){
@@ -1114,7 +1184,7 @@ function renderInstMaterial(){
       others.appendChild(b);
     }
     const sp = document.createElement("span");
-    const queda = it.cnt.p - puesto;
+    const queda = it.cnt.p + L().signo * puesto;
     sp.className = "stock-pill" + (queda < 0 ? " poco" : "");
     sp.textContent = puesto ? `Contado ${it.cnt.p} → ${queda}` : `Contado ${it.cnt.p}`;
     others.appendChild(sp);
@@ -1144,7 +1214,7 @@ function renderInstMaterial(){
     ul.appendChild(li);
   }
 
-  const t = TIPOS.find(x=>x.id === borrador.tipo);
+  const t = tiposActuales().find(x=>x.id === borrador.tipo);
   const alcance = (!t || t.materiales === "todas") ? "todo el catálogo" : `${permitidos.length} referencias de este tipo`;
   document.getElementById("instMatCount").textContent = `${rows.length} de ${permitidos.length} · ${alcance}`;
   document.getElementById("instStat").textContent = piezas(borrador.mats);
@@ -1152,7 +1222,179 @@ function renderInstMaterial(){
     `piezas · ${Object.keys(borrador.mats).length} referencias`;
 }
 
+
+/* ---------- lectura del albarán en PDF ---------- */
+async function inflar(bytes){
+  for(const fmt of ["deflate","deflate-raw"]){
+    try{
+      const ds = new DecompressionStream(fmt);
+      const lector = new Blob([bytes]).stream().pipeThrough(ds).getReader();
+      const trozos = [];
+      let total = 0;
+      try{
+        while(true){
+          const {done, value} = await lector.read();
+          if(done) break;
+          trozos.push(value); total += value.length;
+        }
+      }catch(e){ /* basura al final del flujo: nos quedamos con lo descomprimido */ }
+      if(total){
+        const out = new Uint8Array(total);
+        let o = 0;
+        for(const t of trozos){ out.set(t, o); o += t.length; }
+        return out;
+      }
+    }catch(e){}
+  }
+  return null;
+}
+function cadenasDeFlujo(s){
+  let out = "";
+  const re = /\((?:\\.|[^\\()])*\)|<[0-9A-Fa-f\s]+>/g;
+  let m;
+  while((m = re.exec(s))){
+    const t = m[0];
+    if(t[0] === "("){
+      out += " " + t.slice(1,-1)
+        .replace(/\\([0-7]{1,3})/g, (x,o)=>String.fromCharCode(parseInt(o,8)))
+        .replace(/\\(.)/g, (x,c)=>({n:" ",r:" ",t:" "}[c] !== undefined ? " " : c));
+    }else{
+      const hex = t.slice(1,-1).replace(/\s+/g,"");
+      let str = "";
+      for(let i=0;i<hex.length-1;i+=2) str += String.fromCharCode(parseInt(hex.substr(i,2),16));
+      out += " " + str;
+    }
+  }
+  return out;
+}
+async function textoDePdf(buffer){
+  const bytes = new Uint8Array(buffer);
+  const lat = new TextDecoder("latin1").decode(bytes);
+  let texto = "";
+  let pos = 0;
+  while(true){
+    const i = lat.indexOf("stream", pos);
+    if(i < 0) break;
+    let ini = i + 6;
+    if(lat[ini] === "\r") ini++;
+    if(lat[ini] === "\n") ini++;
+    const fin = lat.indexOf("endstream", ini);
+    if(fin < 0) break;
+    let corte = fin;
+    while(corte > ini && (bytes[corte-1] === 0x0a || bytes[corte-1] === 0x0d || bytes[corte-1] === 0x20)) corte--;
+    const datos = bytes.subarray(ini, corte);
+    let contenido = null;
+    if(datos.length > 2 && datos[0] === 0x78) contenido = await inflar(datos);
+    const s = contenido ? new TextDecoder("latin1").decode(contenido) : lat.slice(ini, fin);
+    if(/(Tj|TJ|Td|TD|Tf)/.test(s)) texto += " " + cadenasDeFlujo(s);
+    pos = fin + 9;
+  }
+  return texto.replace(/\s+/g, " ");
+}
+function datosDelAlbaran(texto){
+  const num = texto.match(/\b([A-Z]{2}\d{6,10})\b/);
+  const f = texto.match(/\b(\d{2})\s*\/\s*(\d{2})\s*\/\s*(\d{2,4})\b/);
+  let fecha = "";
+  if(f){
+    const a = f[3].length === 2 ? "20" + f[3] : f[3];
+    fecha = `${a}-${f[2]}-${f[1]}`;
+  }
+  return {numero: num ? num[1] : "", fecha};
+}
+/* Códigos que vienen en los albaranes pero no entran en stock.
+   Añade aquí más patrones si aparecen otros. */
+const CODIGOS_IGNORADOS = [/\bZES\d{0,6}[A-Z]?\b/g];
+
+function lineasDelAlbaran(texto){
+  return (texto.match(/\s0{2,}\d{1,6}(?=\s)/g) || []).length;
+}
+function lineasIgnoradas(texto){
+  let n = 0;
+  for(const re of CODIGOS_IGNORADOS) n += (texto.match(re) || []).length;
+  return n;
+}
+function detectarReferencias(texto){
+  const arr = texto.split("");
+  const orden = items.map(i=>i.ref).sort((a,b)=>b.length - a.length);
+  const hallado = {};
+  for(const ref of orden){
+    const escapada = ref.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const re = new RegExp("(?:^|[^A-Za-z0-9])(" + escapada + ")(?![A-Za-z0-9])", "g");
+    let texto2 = arr.join("");
+    let m;
+    while((m = re.exec(texto2))){
+      const desde = m.index + m[0].length - ref.length;
+      // cantidad: primer entero suelto después de la referencia
+      let cola = texto2.slice(desde + ref.length, desde + ref.length + 140);
+      const corte = cola.indexOf("·");            // otra referencia ya leída: no pasamos de ahí
+      if(corte > 0) cola = cola.slice(0, corte);
+      // cantidad: número suelto, no el pegado a un texto tipo "LR6" o "v2"
+      const num = cola.match(/(?:^|\s)(\d{1,4})(?:[.,]\d{1,3})?(?=\s|$)/);
+      let cant = num ? parseInt(num[1], 10) : 1;
+      if(!Number.isFinite(cant) || cant <= 0 || cant > 9999) cant = 1;
+      hallado[ref] = (hallado[ref] || 0) + cant;
+      for(let k = desde; k < desde + ref.length; k++) arr[k] = "·";
+      texto2 = arr.join("");
+      re.lastIndex = desde;
+    }
+  }
+  return hallado;
+}
+function volcarAlbaran(texto, origen){
+  const hallado = detectarReferencias(texto);
+  const refs = Object.keys(hallado);
+  const est = document.getElementById("pedidoEstado");
+
+  // número y fecha del albarán, si vienen en el documento
+  const datos = datosDelAlbaran(texto);
+  if(datos.numero && !document.getElementById("instNum").value.trim()){
+    borrador.numero = datos.numero;
+    document.getElementById("instNum").value = datos.numero;
+  }
+  if(datos.fecha){
+    borrador.fecha = datos.fecha;
+    document.getElementById("instFecha").value = datos.fecha;
+  }
+
+  if(!refs.length){
+    est.textContent = `No he reconocido ninguna referencia en ${origen}. Añádelas a mano en la pantalla siguiente.`;
+    return;
+  }
+  borrador.mats = {};
+  for(const [ref,n] of Object.entries(hallado)) borrador.mats[ref] = n;
+  instFiltro = "puestas";
+
+  const piezasTotal = Object.values(hallado).reduce((a,n)=>a+n, 0);
+  const sueltas = Math.max(0, lineasDelAlbaran(texto) - refs.length - lineasIgnoradas(texto));
+  est.textContent = `${refs.length} referencias y ${piezasTotal} piezas leídas de ${origen}.`
+    + (sueltas ? ` Ojo: ${sueltas} línea${sueltas>1?"s":""} del albarán no corresponde${sueltas>1?"n":""} a ninguna referencia de tu catálogo.` : "")
+    + " Revísalo en la pantalla siguiente antes de confirmar.";
+}
+async function leerAlbaranPdf(file){
+  const est = document.getElementById("pedidoEstado");
+  est.textContent = "Leyendo el albarán…";
+  try{
+    const texto = await textoDePdf(await file.arrayBuffer());
+    if(!texto.trim()){
+      est.textContent = "Ese PDF no trae texto legible, parece escaneado. Pega el texto o añade las referencias a mano.";
+      return;
+    }
+    volcarAlbaran(texto, file.name);
+  }catch(e){
+    est.textContent = "No he podido leer el PDF. Pega el texto o añade las referencias a mano.";
+  }
+}
+
 /* ---------- controles ---------- */
+document.getElementById("pedidoPdf").addEventListener("change", e=>{
+  const f = e.target.files[0];
+  if(f) leerAlbaranPdf(f);
+});
+document.getElementById("pedidoLeerTexto").addEventListener("click", ()=>{
+  const t = document.getElementById("pedidoTexto").value;
+  if(!t.trim()){ document.getElementById("pedidoEstado").textContent = "Pega antes el texto del albarán."; return; }
+  volcarAlbaran(t.replace(/\s+/g," "), "el texto pegado");
+});
 document.querySelectorAll(".views button").forEach(b=>{
   b.addEventListener("click", ()=>setVista(b.dataset.v));
 });
@@ -1171,9 +1413,9 @@ document.getElementById("instTipo").addEventListener("change", ()=>{ if(borrador
 
 function resumenInstalaciones(){
   const fecha = new Date().toLocaleString("es-ES",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"});
-  const l = [`Instalaciones — ${tech.nombre} (${tech.matricula})`, fecha, ""];
-  if(!instalaciones.length) l.push("Sin instalaciones registradas.");
-  for(const g of instalaciones){
+  const l = [`${L().plural.charAt(0).toUpperCase() + L().plural.slice(1)} — ${tech.nombre} (${tech.matricula})`, fecha, ""];
+  if(!registros().length) l.push(`${L().sin} registrados.`);
+  for(const g of registros()){
     l.push(`${g.numero} · ${tipoNombre(g.tipo)} · ${fechaCorta(g.fecha)}${g.notas ? " · " + g.notas : ""}`);
     for(const [ref,n] of Object.entries(g.mats)){
       const it = byRef.get(ref);
@@ -1181,8 +1423,8 @@ function resumenInstalaciones(){
     }
     l.push("");
   }
-  const total = instalaciones.reduce((a,g)=>a+piezas(g.mats),0);
-  l.push(`${instalaciones.length} instalaciones · ${total} piezas`);
+  const total = registros().reduce((a,g)=>a+piezas(g.mats),0);
+  l.push(`${registros().length} ${L().plural} · ${total} piezas`);
   return l.join("\n");
 }
 async function copiarInstalaciones(){
