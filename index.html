@@ -17,7 +17,7 @@
     --bg:#F4F4F6; --card:#FFFFFF; --card-2:#F6F6F8;
     --line:#DCDCE1; --line-soft:#EDEDF1;
     --text:#141418; --text-soft:#5D5D66; --text-faint:#8E8E97;
-    --brand:#E2001A; --propio:#E2001A; --transito:#6B6B75; --defectuoso:#8A0010; --tipo:#2A2A30;
+    --brand:#E2001A; --propio:#E2001A; --transito:#6B6B75; --defectuoso:#8A0010; --tipo:#2A2A30; --desmontado:#A85A12;
     --accent:var(--propio);
     --shadow:0 1px 0 rgba(20,20,24,.06);
     --radius:10px;
@@ -27,7 +27,7 @@
       --bg:#141417; --card:#1E1E23; --card-2:#191920;
       --line:#33333B; --line-soft:#2A2A32;
       --text:#F2F2F4; --text-soft:#A9A9B2; --text-faint:#7C7C86;
-      --brand:#FF4B5C; --propio:#FF4B5C; --transito:#ADADB8; --defectuoso:#FF8A8A; --tipo:#E6E6EA;
+      --brand:#FF4B5C; --propio:#FF4B5C; --transito:#ADADB8; --defectuoso:#FF8A8A; --tipo:#E6E6EA; --desmontado:#E0A264;
       --shadow:none;
     }
   }
@@ -35,7 +35,7 @@
     --bg:#141417; --card:#1E1E23; --card-2:#191920;
     --line:#33333B; --line-soft:#2A2A32;
     --text:#F2F2F4; --text-soft:#A9A9B2; --text-faint:#7C7C86;
-    --brand:#FF4B5C; --propio:#FF4B5C; --transito:#ADADB8; --defectuoso:#FF8A8A; --tipo:#E6E6EA;
+    --brand:#FF4B5C; --propio:#FF4B5C; --transito:#ADADB8; --defectuoso:#FF8A8A; --tipo:#E6E6EA; --desmontado:#E0A264;
     --shadow:none;
   }
 
@@ -444,6 +444,10 @@
 
     <div id="instMat" hidden>
       <button class="inst-head" id="instHead" title="Cambiar número, tipo o fecha"></button>
+      <nav class="views" id="instHojas" role="group" aria-label="Instalado o desmontado" hidden>
+        <button data-h="mats" aria-pressed="true">Instalado</button>
+        <button data-h="desm" aria-pressed="false">Desmontado</button>
+      </nav>
       <div class="tools">
         <div class="search">
           <input id="instQ" type="search" placeholder="Buscar material" autocomplete="off" aria-label="Buscar material">
@@ -492,21 +496,22 @@
 
 <script>
 /* ===== referencias (todas a cero) ===== */
-const DATA = "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";
+const DATA = "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";
 let BASE = [];
 
 const TYPES = [
   {key:"p", label:"Propio",     color:"var(--propio)"},
   {key:"t", label:"Tránsito",   color:"var(--transito)"},
   {key:"d", label:"Defectuoso", color:"var(--defectuoso)"},
-  {key:"s", label:"Stock type", color:"var(--tipo)"}
+  {key:"s", label:"Stock type", color:"var(--tipo)"},
+  {key:"x", label:"Desmontado", color:"var(--desmontado)"}
 ];
 const KEYS = TYPES.map(t=>t.key);
 
 let items = [];
 let byRef = new Map();
 function initItems(){
-  items = BASE.map(r=>({ref:r[0], name:r[1], cnt:{p:0,t:0,d:0,s:0}}));
+  items = BASE.map(r=>({ref:r[0], name:r[1], cnt:{p:0,t:0,d:0,s:0,x:0}}));
   byRef = new Map(items.map(i=>[i.ref,i]));
 }
 const touched = new Set();
@@ -541,6 +546,7 @@ function load(){
     id:String(g.id), numero:String(g.numero), tipo:String(g.tipo||""),
     fecha:String(g.fecha||""), notas:String(g.notas||""),
     mats:(g.mats && typeof g.mats === "object") ? g.mats : {},
+    desm:(g.desm && typeof g.desm === "object") ? g.desm : {},
     actualizada:Number(g.actualizada) || 0
   }));
   if(Array.isArray(data.trabajos)) trabajos = limpiar(data.trabajos);
@@ -880,6 +886,7 @@ let vista = "stock";
 let trabajos = [];
 let pedidos = [];
 let borrador = null;
+let hoja = "mats";                       // "mats" = instalado · "desm" = desmontado
 let instQuery = "";
 let instListQuery = "";
 let instFiltro = "todos";
@@ -887,6 +894,11 @@ let instFiltro = "todos";
 const hoyISO = ()=> new Date().toISOString().slice(0,10);
 const tipoNombre = id => (tiposActuales().find(t=>t.id===id) || {nombre:id}).nombre;
 const piezas = mats => Object.values(mats||{}).reduce((a,n)=>a+n,0);
+const esMantenimiento = tipo => TIPOS_MANT.some(t=>t.id === tipo);
+/* El desmontaje vale para cualquier trabajo: un cambio de equipo desmonta lo viejo
+   y monta lo nuevo en el mismo parte. En pedidos no aplica. */
+const conDesmontaje = ()=> ambito === "trabajo" && !!borrador;
+const bolsa = ()=> { if(!borrador[hoja]) borrador[hoja] = {}; return borrador[hoja]; };
 
 function materialesDeTipo(id){
   const t = tiposActuales().find(x=>x.id===id);
@@ -914,7 +926,8 @@ function setVista(v){
 }
 
 function nuevaInstalacion(){
-  borrador = {id:null, numero:"", tipo:tiposActuales()[0].id, fecha:hoyISO(), notas:"", mats:{}, paso:"datos"};
+  borrador = {id:null, numero:"", tipo:tiposActuales()[0].id, fecha:hoyISO(), notas:"", mats:{}, desm:{}, paso:"datos"};
+  hoja = "mats";
   instQuery = ""; instFiltro = "todos";
   render();
 }
@@ -925,14 +938,17 @@ function esBase(ref, tipo){
 function abrirInstalacion(id){
   const g = registros().find(x=>x.id===id);
   if(!g) return;
-  borrador = {id:g.id, numero:g.numero, tipo:g.tipo, fecha:g.fecha, notas:g.notas||"", mats:{...g.mats}, paso:"material", baseTipo:g.tipo};
+  borrador = {id:g.id, numero:g.numero, tipo:g.tipo, fecha:g.fecha, notas:g.notas||"", mats:{...g.mats}, desm:{...(g.desm||{})}, paso:"material", baseTipo:g.tipo};
+  hoja = "mats";
   instQuery = ""; instFiltro = "todos";
   render();
 }
 function volverALista(){
-  if(borrador && borrador.paso === "material" && piezas(borrador.mats) > 0){
+  if(borrador && borrador.paso === "material" && piezas(borrador.mats) + piezas(borrador.desm) > 0){
     const guardada = borrador.id ? registros().find(x=>x.id===borrador.id) : null;
-    const mismo = guardada && JSON.stringify(guardada.mats) === JSON.stringify(borrador.mats);
+    const mismo = guardada
+      && JSON.stringify(guardada.mats) === JSON.stringify(borrador.mats)
+      && JSON.stringify(guardada.desm || {}) === JSON.stringify(borrador.desm);
     if(!mismo && !confirm("Saldrás sin guardar y se pierde el material que has puesto. ¿Salir?")) return;
   }
   borrador = null; render();
@@ -951,11 +967,11 @@ function pasarAMaterial(){
   // material que no cabe en el tipo elegido
   if(Array.isArray(t.materiales)){
     const ok = new Set(t.materiales);
-    const fuera = Object.keys(borrador.mats).filter(r=>!ok.has(r));
+    const fuera = [...new Set([...Object.keys(borrador.mats), ...Object.keys(borrador.desm||{})])].filter(r=>!ok.has(r));
     if(fuera.length){
       const nombres = fuera.slice(0,5).join(", ") + (fuera.length > 5 ? `, y ${fuera.length-5} más` : "");
       if(!confirm(`En «${t.nombre}» no se puede imputar: ${nombres}. Se quitará de esta instalación. ¿Seguir?`)) return;
-      fuera.forEach(r=>delete borrador.mats[r]);
+      fuera.forEach(r=>{ delete borrador.mats[r]; if(borrador.desm) delete borrador.desm[r]; });
     }
   }
 
@@ -973,70 +989,91 @@ function pasarAMaterial(){
   }
 
   borrador.paso = "material";
+  hoja = "mats";
   render();
 }
 
 function cambiarMat(ref, delta){
-  const n = (borrador.mats[ref] || 0) + delta;
-  if(n <= 0) delete borrador.mats[ref]; else borrador.mats[ref] = n;
+  const b = bolsa();
+  const n = (b[ref] || 0) + delta;
+  if(n <= 0) delete b[ref]; else b[ref] = n;
   render();
 }
 function ponerMat(ref, valor){
+  const b = bolsa();
   const n = Math.round(Number(valor));
-  if(!Number.isFinite(n) || n <= 0) delete borrador.mats[ref]; else borrador.mats[ref] = n;
+  if(!Number.isFinite(n) || n <= 0) delete b[ref]; else b[ref] = n;
   render();
 }
 
 function guardarInstalacion(){
-  const total = piezas(borrador.mats);
-  if(total === 0){ toast(`No has puesto material en este registro de ${L().plural}`); return; }
-  const anterior = borrador.id ? ((registros().find(x=>x.id===borrador.id) || {}).mats || {}) : {};
-  const refs = new Set([...Object.keys(borrador.mats), ...Object.keys(anterior)]);
+  const totalM = piezas(borrador.mats), totalD = piezas(borrador.desm);
+  if(totalM + totalD === 0){ toast(`No has puesto material en este registro de ${L().plural}`); return; }
 
+  const g = borrador.id ? registros().find(x=>x.id === borrador.id) : null;
+  const antM = (g && g.mats) || {}, antD = (g && g.desm) || {};
   const signo = L().signo;
+  const refsM = new Set([...Object.keys(borrador.mats), ...Object.keys(antM)]);
+  const refsD = new Set([...Object.keys(borrador.desm), ...Object.keys(antD)]);
+
+  // aviso de stock negativo solo por lo que sale del almacén
   const faltan = [];
-  for(const ref of refs){
-    const d = (borrador.mats[ref]||0) - (anterior[ref]||0);
-    const it = byRef.get(ref);
-    if(signo > 0) continue;
-    if(it && d > 0 && it.cnt.p - d < 0) faltan.push(`${ref} (contadas ${it.cnt.p})`);
+  if(signo < 0){
+    for(const ref of refsM){
+      const d = (borrador.mats[ref]||0) - (antM[ref]||0);
+      const it = byRef.get(ref);
+      if(it && d > 0 && it.cnt.p - d < 0) faltan.push(`${ref} (quedan ${it.cnt.p})`);
+    }
   }
   if(faltan.length){
     const lista = faltan.slice(0,5).join(", ") + (faltan.length > 5 ? `, y ${faltan.length-5} más` : "");
-    if(!confirm(`Vas a imputar más de lo que tienes contado en: ${lista}. ¿Guardar igualmente?`)) return;
+    if(!confirm(`El stock se queda en negativo en: ${lista}. ¿Guardar igualmente?`)) return;
   }
 
-  for(const ref of refs){
-    const d = (borrador.mats[ref]||0) - (anterior[ref]||0);
+  for(const ref of refsM){
+    const d = (borrador.mats[ref]||0) - (antM[ref]||0);
     const it = byRef.get(ref);
     if(it && d !== 0){ it.cnt.p += signo * d; touched.add(ref+"|p"); }
+  }
+  for(const ref of refsD){   // lo desmontado entra en la columna Desmontado
+    const d = (borrador.desm[ref]||0) - (antD[ref]||0);
+    const it = byRef.get(ref);
+    if(it && d !== 0){ it.cnt.x += d; touched.add(ref+"|x"); }
   }
 
   const reg = {
     id: borrador.id || ("i" + Date.now().toString(36)),
     numero: borrador.numero, tipo: borrador.tipo, fecha: borrador.fecha,
-    notas: borrador.notas, mats: {...borrador.mats}, actualizada: Date.now()
+    notas: borrador.notas, mats: {...borrador.mats}, desm: {...borrador.desm},
+    actualizada: Date.now()
   };
   const lista = registros();
   const i = lista.findIndex(x=>x.id === reg.id);
-  if(i >= 0) lista[i] = reg; else lista.unshift(reg);
-
   const editada = i >= 0;
-  borrador = null;
+  if(editada) lista[i] = reg; else lista.unshift(reg);
+
+  borrador = null; hoja = "mats";
   save(); render();
-  toast(`${L().Uno} ${reg.numero} ${editada ? "actualizado" : "guardado"} · ${total} piezas`);
+  toast(`${L().Uno} ${reg.numero} ${editada ? "actualizado" : "guardado"} · ${totalM} piezas` + (totalD ? ` y ${totalD} desmontadas` : ""));
 }
 
 function borrarInstalacion(id){
   const g = registros().find(x=>x.id === id);
   if(!g) return;
-  if(!confirm(`Se elimina el ${L().uno} ${g.numero}. Sus ${piezas(g.mats)} piezas ${L().signo < 0 ? "vuelven al" : "se restan del"} stock. ¿Seguir?`)) return;
+  const totalD = piezas(g.desm || {});
+  if(!confirm(`Se elimina el ${L().uno} ${g.numero}. Sus ${piezas(g.mats)} piezas ${L().signo < 0 ? "vuelven al" : "se restan del"} stock` + (totalD ? ` y las ${totalD} desmontadas salen de él` : "") + ". ¿Seguir?")) return;
+
   for(const [ref,n] of Object.entries(g.mats)){
     const it = byRef.get(ref);
     if(it){ it.cnt.p -= L().signo * n; touched.add(ref+"|p"); }
   }
+  for(const [ref,n] of Object.entries(g.desm || {})){
+    const it = byRef.get(ref);
+    if(it){ it.cnt.x -= n; touched.add(ref+"|x"); }
+  }
+
   setRegistros(registros().filter(x=>x.id !== id));
-  borrador = null;
+  borrador = null; hoja = "mats";
   save(); render();
   toast(`${L().Uno} ${g.numero} eliminado · stock corregido`);
 }
@@ -1086,7 +1123,7 @@ function renderInstLista(){
     const info = document.createElement("div");
     const num = document.createElement("div"); num.className = "num"; num.textContent = g.numero;
     const meta = document.createElement("div"); meta.className = "meta";
-    meta.textContent = `${tipoNombre(g.tipo)} · ${fechaCorta(g.fecha)} · ${piezas(g.mats)} piezas` + (g.notas ? ` · ${g.notas}` : "");
+    meta.textContent = `${tipoNombre(g.tipo)} · ${fechaCorta(g.fecha)} · ${piezas(g.mats)} piezas` + (piezas(g.desm || {}) ? ` · ${piezas(g.desm)} desmontadas` : "") + (g.notas ? ` · ${g.notas}` : "");
     info.append(num, meta);
 
     const acc = document.createElement("div"); acc.className = "acc";
@@ -1159,8 +1196,8 @@ function renderInstMaterial(){
   const q = instQuery.trim().toLowerCase();
   const rows = permitidos.filter(it=>{
     if(q && !(it.ref.toLowerCase().includes(q) || it.name.toLowerCase().includes(q))) return false;
-    if(instFiltro === "puestas" && !borrador.mats[it.ref]) return false;
-    if(instFiltro === "stock" && it.cnt.p <= 0 && !borrador.mats[it.ref]) return false;
+    if(instFiltro === "puestas" && !bolsa()[it.ref]) return false;
+    if(instFiltro === "stock" && it.cnt.p <= 0 && !bolsa()[it.ref]) return false;
     return true;
   });
 
@@ -1169,7 +1206,7 @@ function renderInstMaterial(){
   document.getElementById("instMatEmpty").hidden = rows.length > 0;
 
   for(const it of rows){
-    const puesto = borrador.mats[it.ref] || 0;
+    const puesto = bolsa()[it.ref] || 0;
     const li = document.createElement("li");
     li.className = "row" + (puesto ? " has" : "");
 
@@ -1183,10 +1220,20 @@ function renderInstMaterial(){
       b.textContent = "Base del tipo";
       others.appendChild(b);
     }
+    const otra = hoja === "mats" ? (borrador.desm || {})[it.ref] : borrador.mats[it.ref];
+    if(otra){
+      const o = document.createElement("span");
+      o.className = "stock-pill";
+      o.textContent = (hoja === "mats" ? "Desmontado " : "Instalado ") + otra;
+      others.appendChild(o);
+    }
     const sp = document.createElement("span");
-    const queda = it.cnt.p + L().signo * puesto;
+    const desmontando = hoja === "desm" && ambito === "trabajo";
+    const col = desmontando ? "x" : "p";
+    const parte = it.cnt[col];
+    const queda = parte + (desmontando ? 1 : L().signo) * puesto;
     sp.className = "stock-pill" + (queda < 0 ? " poco" : "");
-    sp.textContent = puesto ? `Contado ${it.cnt.p} → ${queda}` : `Contado ${it.cnt.p}`;
+    sp.textContent = (desmontando ? "Desmontado " : "Contado ") + (puesto ? `${parte} → ${queda}` : `${parte}`);
     others.appendChild(sp);
     info.append(ref, name, others);
 
@@ -1217,9 +1264,14 @@ function renderInstMaterial(){
   const t = tiposActuales().find(x=>x.id === borrador.tipo);
   const alcance = (!t || t.materiales === "todas") ? "todo el catálogo" : `${permitidos.length} referencias de este tipo`;
   document.getElementById("instMatCount").textContent = `${rows.length} de ${permitidos.length} · ${alcance}`;
-  document.getElementById("instStat").textContent = piezas(borrador.mats);
+  const hojas = document.getElementById("instHojas");
+  hojas.hidden = !conDesmontaje();
+  hojas.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.h === hoja)));
+
+  document.getElementById("instStat").textContent = piezas(bolsa());
   document.getElementById("instStatSub").textContent =
-    `piezas · ${Object.keys(borrador.mats).length} referencias`;
+    (conDesmontaje() ? (hoja === "desm" ? "piezas desmontadas · " : "piezas instaladas · ") : "piezas · ")
+    + `${Object.keys(bolsa()).length} referencias`;
 }
 
 
@@ -1404,6 +1456,9 @@ document.getElementById("instSeguir").addEventListener("click", pasarAMaterial);
 document.getElementById("instGuardar").addEventListener("click", guardarInstalacion);
 document.getElementById("instCancel").addEventListener("click", volverALista);
 document.getElementById("instBorrar").addEventListener("click", ()=>{ if(borrador && borrador.id) borrarInstalacion(borrador.id); });
+document.getElementById("instHojas").querySelectorAll("button").forEach(b=>{
+  b.addEventListener("click", ()=>{ hoja = b.dataset.h; render(); });
+});
 document.getElementById("instHead").addEventListener("click", ()=>{ if(borrador){ borrador.paso = "datos"; render(); } });
 document.getElementById("instQ").addEventListener("input", e=>{ instQuery = e.target.value; render(); });
 document.getElementById("instListQ").addEventListener("input", e=>{ instListQuery = e.target.value; render(); });
