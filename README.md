@@ -38,6 +38,10 @@ Límites, para que no haya sorpresas: la contraseña es la misma para todos, qui
 
 Desde el móvil, "Añadir a pantalla de inicio" la instala como app y funciona sin cobertura, que es lo normal contando en un trastero o en la furgoneta.
 
+## Manual para los técnicos
+
+`manual.html` es el manual de uso, escrito para técnicos y sin tecnicismos: entrar, contar, apuntar trabajos, leer albaranes, enviar el conteo y qué hacer si algo falla. Queda publicado en `https://<usuario>.github.io/<repositorio>/manual.html` y se guarda para consultarlo sin cobertura.
+
 ## Cambiar el catálogo
 
 Las referencias están en la constante `BASE` de `index.html`, en el formato `["referencia", "descripción"]`. Añadir o quitar líneas es todo lo que hace falta.

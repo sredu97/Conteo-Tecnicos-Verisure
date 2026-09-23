@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Manual · Hoja de conteo de stock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F4F4F6; --card:#FFFFFF; --card-2:#F6F6F8; --line:#DCDCE1;
+    --text:#141418; --soft:#5D5D66; --faint:#8E8E97;
+    --brand:#E2001A; --resta:#8A0010; --suma:#A85A12;
+  }
+  :root:not([data-theme="light"]){
+    @media (prefers-color-scheme: dark){
+      --bg:#141417; --card:#1E1E23; --card-2:#191920; --line:#33333B;
+      --text:#F2F2F4; --soft:#A9A9B2; --faint:#7C7C86;
+      --brand:#FF4B5C; --resta:#FF8A8A; --suma:#E0A264;
+    }
+  }
+  *{box-sizing:border-box}
+  html{scroll-padding-top:env(safe-area-inset-top,0px)}
+  body{
+    margin:0;background:var(--bg);color:var(--text);
+    font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    font-size:16px;line-height:1.55;
+    padding:calc(24px + env(safe-area-inset-top,0px)) 14px calc(40px + env(safe-area-inset-bottom,0px));
+  }
+  .wrap{max-width:720px;margin:0 auto}
+
+  h1{
+    font-family:"Barlow Semi Condensed",sans-serif;font-weight:700;font-size:34px;
+    line-height:1.05;margin:0 0 6px;color:var(--brand);
+  }
+  .sub{color:var(--soft);margin:0 0 26px;font-size:15px}
+  h2{
+    font-family:"Barlow Semi Condensed",sans-serif;font-weight:700;font-size:25px;
+    margin:34px 0 10px;padding-top:14px;border-top:1px solid var(--line);
+  }
+  h3{font-family:"Barlow Semi Condensed",sans-serif;font-weight:600;font-size:19px;margin:20px 0 6px}
+  p{margin:0 0 12px}
+  ol,ul{margin:0 0 12px;padding-left:22px}
+  li{margin-bottom:6px}
+  b{font-weight:600}
+
+  .tarjeta{
+    background:var(--card);border:1px solid var(--line);border-left:3px solid var(--brand);
+    border-radius:10px;padding:14px 16px;margin:14px 0;
+  }
+  .tarjeta.ojo{border-left-color:var(--suma)}
+  .tarjeta.aviso{border-left-color:var(--resta)}
+  .tarjeta h3{margin-top:0}
+  .tarjeta p:last-child, .tarjeta ul:last-child{margin-bottom:0}
+
+  .boton{
+    display:inline-block;background:var(--text);color:var(--bg);border-radius:7px;
+    padding:1px 8px;font-size:14px;font-weight:500;white-space:nowrap;
+  }
+  .pest{
+    display:inline-block;border:1px solid var(--brand);color:var(--brand);border-radius:999px;
+    padding:0 9px;font-size:14px;font-weight:500;white-space:nowrap;
+  }
+  .num{
+    font-family:"Barlow Semi Condensed",sans-serif;font-variant-numeric:tabular-nums;
+    background:var(--card-2);border:1px solid var(--line);border-radius:6px;padding:0 6px;
+  }
+  .indice{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:8px}
+  .indice ol{margin:0;padding-left:20px}
+  .indice a{color:var(--text)}
+  a{color:var(--brand)}
+  footer{margin-top:36px;padding-top:14px;border-top:1px solid var(--line);color:var(--faint);font-size:13.5px}
+  @media print{
+    body{background:#fff;color:#000;font-size:12pt;padding:0}
+    h2{page-break-after:avoid}
+    .tarjeta{break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Hoja de conteo de stock</h1>
+<p class="sub">Manual para técnicos. Se lee en cinco minutos y no hace falta saber de informática.</p>
+
+<div class="indice">
+  <ol>
+    <li><a href="#empezar">Entrar y dejarla instalada</a></li>
+    <li><a href="#conteo">Contar tu material</a></li>
+    <li><a href="#trabajos">Trabajos: lo que montas y lo que desmontas</a></li>
+    <li><a href="#pedidos">Pedidos: leer el albarán</a></li>
+    <li><a href="#enviar">Enviar tu conteo</a></li>
+    <li><a href="#deshacer">Si te equivocas</a></li>
+    <li><a href="#problemas">Problemas frecuentes</a></li>
+  </ol>
+</div>
+
+<div class="tarjeta">
+  <h3>En resumen</h3>
+  <p>La app lleva la cuenta del material que tienes en la furgoneta. Cuentas lo que hay, apuntas lo que montas y lo que desmontas en cada trabajo, y sumas lo que te llega en los pedidos. Todo se guarda solo en tu móvil.</p>
+</div>
+
+<h2 id="empezar">1. Entrar y dejarla instalada</h2>
+<ol>
+  <li>Abre el enlace que te han pasado. Pide una <b>contraseña</b>: es la misma para todo el equipo y te la dan por privado, no está escrita en ningún sitio de la app.</li>
+  <li>Escribe tu <b>nombre y apellidos</b> y tu <b>matrícula</b>. Van en la hoja y en lo que envíes, así que ponlos bien.</li>
+  <li>Ya estás dentro. Verás las referencias, todas a cero.</li>
+</ol>
+
+<div class="tarjeta">
+  <h3>Instálala como app</h3>
+  <p>Desde el navegador del móvil, menú <span class="boton">⋮</span> → <b>Añadir a pantalla de inicio</b>. Te queda un icono como cualquier otra app y <b>funciona sin cobertura</b>, que es lo normal en un trastero o en un garaje.</p>
+</div>
+
+<div class="tarjeta">
+  <h3>Marca "Recordar en este dispositivo"</h3>
+  <p>En la pantalla de la contraseña. Si no la marcas, te la pedirá cada vez que cierres.</p>
+</div>
+
+<h2 id="conteo">2. Contar tu material</h2>
+<p>Arriba tienes cinco pestañas, una por cada tipo de cantidad: <b>Propio</b>, <b>Tránsito</b>, <b>Defectuoso</b>, <b>Stock type</b> y <b>Desmontado</b>. Elige la que estás contando; lo normal es Propio.</p>
+<ul>
+  <li>Cada referencia tiene <span class="boton">−</span> y <span class="boton">+</span>. Toca el <span class="num">0</span> para escribir la cantidad directamente, más rápido si tienes 48 pilas.</li>
+  <li>Lo que aún no has tocado sale en gris. En cuanto lo tocas, la referencia queda marcada como contada y avanza la barra de progreso.</li>
+  <li>El buscador acepta el código o el nombre: escribe "pila" o "7014", lo que te sea más cómodo.</li>
+  <li>Los filtros te ahorran scroll: <b>Sin contar</b> te deja lo que te falta, <b>Con unidades</b> lo que ya tiene algo.</li>
+</ul>
+
+<div class="tarjeta">
+  <h3>La flecha ⟲</h3>
+  <p>A la izquierda del −. Deja esa referencia como si no la hubieras contado. Útil si te lías con una.</p>
+</div>
+
+<h2 id="trabajos">3. Trabajos: lo que montas y lo que desmontas</h2>
+<p>En la pestaña <span class="pest">Trabajos</span> apuntas cada instalación o mantenimiento. El material que uses <b>sale solo</b> de tu conteo, no tienes que descontarlo a mano.</p>
+<ol>
+  <li>Pulsa <span class="boton">Nuevo trabajo</span>.</li>
+  <li>Pon el <b>número de instalación</b> y elige el <b>tipo</b>: Alarma Hogar, Hogar Premium, Negocio, Negocio Premium o Mantenimiento. La fecha se pone sola y las notas son opcionales.</li>
+  <li>Pulsa <span class="boton">Continuar</span>. Solo te aparece el material que se puede imputar a ese tipo. En las alarmas, el kit de base ya viene puesto y marcado en rojo.</li>
+  <li>Marca cantidades con − y +.</li>
+  <li>Pulsa <span class="boton">Guardar y descontar</span>.</li>
+</ol>
+
+<div class="tarjeta ojo">
+  <h3>Instalado y Desmontado</h3>
+  <p>Dentro del trabajo hay dos hojas. En <b>Instalado</b> va lo que sale de tu furgoneta y se descuenta. En <b>Desmontado</b> va lo que retiras de casa del cliente, que entra en la columna Desmontado.</p>
+  <p>Para un echegarazo: el equipo nuevo en Instalado, la alarma vieja en Desmontado, todo en el mismo parte.</p>
+</div>
+
+<p>En cada línea ves cómo queda el stock antes de guardar, por ejemplo <span class="num">Contado 16 → 14</span>. Si imputas más de lo que tienes contado, te avisa pero te deja seguir, porque puede que aún no lo hayas contado todo.</p>
+
+<h3>Corregir o borrar un trabajo</h3>
+<ul>
+  <li><b>Abrir</b> un trabajo de la lista te deja cambiar cantidades. Solo se ajusta la diferencia, no se descuenta dos veces.</li>
+  <li>Tocando la cabecera roja cambias número, tipo o fecha.</li>
+  <li>La <b>✕</b> lo elimina y el material vuelve a tu conteo.</li>
+</ul>
+
+<h2 id="pedidos">4. Pedidos: leer el albarán</h2>
+<p>En la pestaña <span class="pest">Pedidos</span> das de alta el material que te llega. Aquí la app <b>suma</b>.</p>
+<ol>
+  <li>Pulsa <span class="boton">Nuevo pedido</span>.</li>
+  <li>Elige el <b>albarán en PDF</b> desde el móvil. La app lo lee y saca las referencias y las cantidades. El número de albarán y la fecha se rellenan solos.</li>
+  <li>Pulsa <span class="boton">Continuar</span> y <b>revisa la lista</b>. Aquí puedes corregir cantidades, quitar lo que no haya llegado o añadir lo que la app no haya pillado.</li>
+  <li>Pulsa <span class="boton">Confirmar y sumar al stock</span>. Hasta ese momento no se ha sumado nada.</li>
+</ol>
+
+<div class="tarjeta aviso">
+  <h3>Revisa siempre antes de confirmar</h3>
+  <p>La lectura del PDF es buena, pero un albarán distinto o un escaneo pueden dársele mal. Si te avisa de que hay líneas que no reconoce, míralas. Los códigos que empiezan por ZES no se cuentan y los ignora a propósito.</p>
+  <p>¿El PDF no se deja leer? Despliega <b>"El PDF no se deja leer"</b>, pega el texto del albarán y pulsa leer. Y si no, añade las referencias a mano.</p>
+</div>
+
+<h2 id="enviar">5. Enviar tu conteo</h2>
+<ul>
+  <li><span class="boton">Copiar resumen</span> en la pestaña de conteo: copia tu nombre, matrícula, fecha y las referencias con unidades. Lo pegas en WhatsApp o en un correo.</li>
+  <li><span class="boton">Copiar resumen</span> en Trabajos o Pedidos: copia esos registros con su desglose.</li>
+  <li><span class="boton">Guardar CSV</span>: descarga el fichero completo, con tu matrícula en el nombre, para enviarlo por correo.</li>
+</ul>
+
+<h2 id="deshacer">6. Si te equivocas</h2>
+<div class="tarjeta ojo">
+  <h3>El botón Deshacer</h3>
+  <p>Aparece abajo en cuanto haces algo gordo: vaciar la hoja o eliminar un trabajo o un pedido. Púlsalo y vuelve todo: el conteo, lo marcado, los trabajos y los pedidos.</p>
+  <p>Aguanta aunque cierres la app, así que si vaciaste por error ayer, sigue ahí. Pero es <b>un solo paso atrás</b>: deshace lo último, no un historial. Si vacías y luego borras un trabajo, al deshacer recuperas el trabajo, no el vaciado.</p>
+</div>
+<p><span class="boton">Vaciar</span> pone todo a cero y borra trabajos y pedidos. Se usa al empezar un recuento nuevo, no en medio de la faena.</p>
+
+<h2 id="problemas">7. Problemas frecuentes</h2>
+
+<h3>No me entra la contraseña</h3>
+<p>Mira las mayúsculas y que no se haya colado un espacio al final, que es lo que pasa al copiar y pegar desde WhatsApp. Marca <b>Ver la contraseña</b> para comprobar lo que escribes.</p>
+
+<h3>He cambiado de móvil y no está mi conteo</h3>
+<p>Los datos se guardan en el móvil donde trabajas, no en un servidor. No pasan de un aparato a otro. Antes de cambiar de móvil o de borrar los datos del navegador, guarda el CSV.</p>
+
+<h3>Estoy sin cobertura</h3>
+<p>Funciona igual si la tienes instalada en la pantalla de inicio. Contar, apuntar trabajos y leer albaranes van sin internet.</p>
+
+<h3>Veo la app antigua después de una actualización</h3>
+<p>Cierra la pestaña y vuelve a abrirla, o recarga. En el ordenador, Ctrl + Shift + R.</p>
+
+<h3>Una referencia no aparece en un trabajo</h3>
+<p>Cada tipo de trabajo solo admite su material. Si te falta una referencia que sí se usa en ese tipo, dilo y se añade a la lista.</p>
+
+<footer>
+  Uso interno. No compartas el enlace ni la contraseña fuera del equipo.
+</footer>
+
+</div>
+</body>
+</html>
